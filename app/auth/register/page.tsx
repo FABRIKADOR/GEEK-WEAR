@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Eye, EyeOff, Check, X } from "lucide-react"
 import { GoogleLoginButton } from "@/components/google-login-button"
 import { useAuth } from "@/contexts/auth-context"
-import { validateEmail, validatePassword, validatePhone, validateName, getPasswordStrength } from "@/lib/validations"
+import { validateEmail, validatePassword, validatePhone, validateName } from "@/lib/validations"
 
 interface PasswordStrength {
   hasLower: boolean
@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
   const router = useRouter()
   const { toast } = useToast()
-  const { signUp } = useAuth()
+  const { signUp } = useAuth() // Usar el contexto existente
 
   const validateField = (field: string, value: string) => {
     const newErrors = { ...errors }
@@ -79,7 +79,13 @@ export default function RegisterPage() {
           delete newErrors.password
         }
         // Actualizar indicadores de fortaleza
-        setPasswordStrength(getPasswordStrength(value))
+        setPasswordStrength({
+          hasLower: /[a-z]/.test(value),
+          hasUpper: /[A-Z]/.test(value),
+          hasNumber: /\d/.test(value),
+          hasSpecial: /[@$!%*?&]/.test(value),
+          hasLength: value.length >= 8,
+        })
         break
       case "confirmPassword":
         if (value !== formData.password) {
@@ -130,6 +136,7 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
+      // Usar el método signUp del contexto existente
       await signUp(formData.email, formData.password, formData.fullName)
 
       toast({
@@ -137,6 +144,7 @@ export default function RegisterPage() {
         description: "Tu cuenta ha sido creada. Revisa tu email para confirmar tu cuenta.",
       })
 
+      // Redirigir al login
       router.push("/auth/login")
     } catch (error: any) {
       console.error("Error en registro:", error)
@@ -160,28 +168,13 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Crear una Cuenta</CardTitle>
-          <CardDescription className="text-center">
-            Regístrate para comenzar a comprar y rastrear tus pedidos
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">Crear cuenta</CardTitle>
+          <CardDescription className="text-center">Ingresa tus datos para registrarte</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {/* Botón de Google */}
-            <GoogleLoginButton />
-
-            {/* Separador */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">O CONTINÚA CON</span>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nombre Completo</Label>
+              <Label htmlFor="fullName">Nombre completo *</Label>
               <Input
                 id="fullName"
                 name="fullName"
@@ -196,7 +189,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 name="email"
@@ -211,7 +204,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono (Opcional)</Label>
+              <Label htmlFor="phone">Teléfono (opcional)</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -225,7 +218,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">Contraseña *</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -277,7 +270,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+              <Label htmlFor="confirmPassword">Confirmar Contraseña *</Label>
               <div className="relative">
                 <Input
                   id="confirmPassword"
@@ -303,11 +296,22 @@ export default function RegisterPage() {
           <CardFooter className="flex flex-col space-y-4">
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full"
               disabled={isLoading || !allRequirementsMet || Object.keys(errors).length > 0}
             >
               {isLoading ? "Registrando..." : "Registrarse"}
             </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">O continúa con</span>
+              </div>
+            </div>
+
+            <GoogleLoginButton />
 
             <p className="text-center text-sm text-gray-600">
               ¿Ya tienes una cuenta?{" "}

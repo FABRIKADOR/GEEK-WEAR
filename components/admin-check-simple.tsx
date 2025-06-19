@@ -30,11 +30,13 @@ export function AdminCheckSimple({ children }: AdminCheckSimpleProps) {
         return
       }
 
-      // Lista simple de emails de administradores
+      // Lista simple de emails de administradores - ACTUALIZADA
       const adminEmails = [
         "admin@example.com",
-        "202200420@upcarco.edu.mx", // Añade tu email aquí
+        "202200420@upcarco.edu.mx",
         "test@example.com",
+        "hola@mail.com", // ✅ Agregado tu email
+        "artinaguilar5555@outlook.com", // ✅ Por si usas este también
       ]
 
       if (adminEmails.includes(user.email)) {
@@ -42,6 +44,7 @@ export function AdminCheckSimple({ children }: AdminCheckSimpleProps) {
         setIsChecking(false)
       } else {
         console.log("❌ Usuario no es administrador:", user.email)
+        console.log("📋 Emails de admin permitidos:", adminEmails)
         router.push("/")
       }
     }
