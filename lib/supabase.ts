@@ -14,6 +14,3 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default supabase
-
-// Exportar también como named export para compatibilidad
-export { supabase }

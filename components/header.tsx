@@ -1,12 +1,19 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, User, Menu, X, Search, ChevronDown } from "lucide-react"
 import { useCartStore } from "@/lib/cart"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { supabase } from "@/lib/supabase-client"
 import { CartSidebar } from "./cart-sidebar"
 import { useCartSidebar } from "@/hooks/use-cart-sidebar"
@@ -17,27 +24,10 @@ export default function Header() {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [categories, setCategories] = useState([])
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const dropdownRef = useRef(null)
   const pathname = usePathname()
-  const router = useRouter()
   const cart = useCartStore((state) => state.cart)
   const itemCount = cart.items.reduce((total, item) => total + item.quantity, 0)
   const { openCart } = useCartSidebar()
-
-  // Cerrar dropdown cuando se hace clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsProfileOpen(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,24 +40,17 @@ export default function Header() {
 
   useEffect(() => {
     const checkUser = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-        if (session?.user) {
-          setUser(session.user)
+      if (session?.user) {
+        setUser(session.user)
 
-          // Verificar si el usuario es administrador
-          const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
+        // Verificar si el usuario es administrador
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
 
-          setIsAdmin(profile?.role === "admin" || session.user.email === "hola@mail.com")
-        } else {
-          setUser(null)
-          setIsAdmin(false)
-        }
-      } catch (error) {
-        console.error("Error checking user:", error)
+        setIsAdmin(profile?.role === "admin")
       }
     }
 
@@ -92,7 +75,7 @@ export default function Header() {
         // Verificar si el usuario es administrador
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
 
-        setIsAdmin(profile?.role === "admin" || session.user.email === "hola@mail.com")
+        setIsAdmin(profile?.role === "admin")
       } else if (event === "SIGNED_OUT") {
         setUser(null)
         setIsAdmin(false)
@@ -113,27 +96,7 @@ export default function Header() {
   }
 
   const handleSignOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      setUser(null)
-      setIsAdmin(false)
-      setIsProfileOpen(false)
-      router.push("/")
-    } catch (error) {
-      console.error("Error signing out:", error)
-    }
-  }
-
-  const handleProfileClick = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsProfileOpen(!isProfileOpen)
-  }
-
-  const handleLinkClick = (href) => {
-    setIsProfileOpen(false)
-    router.push(href)
+    await supabase.auth.signOut()
   }
 
   return (
@@ -222,102 +185,51 @@ export default function Header() {
               </button>
 
               {user ? (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={handleProfileClick}
-                    className="flex items-center text-gray-700 hover:text-grape transition-colors p-1 focus:outline-none focus:ring-2 focus:ring-grape focus:ring-opacity-50 rounded"
-                  >
-                    <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center text-gray-700 hover:text-grape transition-colors p-1">
+                      <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/profile">Perfil</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/orders">Mis Pedidos</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account/wishlist">Lista de Deseos</Link>
+                    </DropdownMenuItem>
 
-                  {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <div className="font-medium text-gray-900 text-sm">Mi Cuenta</div>
-                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
-                      </div>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Administración</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin">Panel de Control</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/productos">Productos</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/categorias">Categorías</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/franquicias">Franquicias</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/orders">Pedidos</Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
 
-                      <div className="py-1">
-                        <button
-                          onClick={() => handleLinkClick("/account/profile")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Perfil
-                        </button>
-
-                        <button
-                          onClick={() => handleLinkClick("/account/orders")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Mis Pedidos
-                        </button>
-
-                        <button
-                          onClick={() => handleLinkClick("/account/wishlist")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Lista de Deseos
-                        </button>
-                      </div>
-
-                      {isAdmin && (
-                        <>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <div className="px-4 py-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
-                            Administración
-                          </div>
-
-                          <div className="py-1">
-                            <button
-                              onClick={() => handleLinkClick("/admin")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Panel de Control
-                            </button>
-
-                            <button
-                              onClick={() => handleLinkClick("/admin/productos")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Productos
-                            </button>
-
-                            <button
-                              onClick={() => handleLinkClick("/admin/categorias")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Categorías
-                            </button>
-
-                            <button
-                              onClick={() => handleLinkClick("/admin/franquicias")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Franquicias
-                            </button>
-
-                            <button
-                              onClick={() => handleLinkClick("/admin/orders")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Pedidos
-                            </button>
-                          </div>
-                        </>
-                      )}
-
-                      <div className="border-t border-gray-100 my-1"></div>
-                      <div className="py-1">
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          Cerrar Sesión
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>Cerrar Sesión</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Link href="/auth/login">
                   <Button variant="ghost" className="text-gray-700 hover:text-grape transition-colors p-1 h-auto">

@@ -39,14 +39,12 @@ export function AdminCheck({ children }: AdminCheckProps) {
         return
       }
 
-      // Lista de emails de administradores - ACTUALIZADA
+      // Lista de emails de administradores
       const adminEmails = [
         "admin@example.com",
-        "202200420@upcarco.edu.mx",
+        "202200420@upcarco.edu.mx", // Tu email
         "test@example.com",
         "admin@geekwear.com",
-        "hola@mail.com", // ✅ Agregado tu email
-        "artinaguilar5555@outlook.com", // ✅ Por si usas este también
       ]
 
       // Verificar si es administrador
@@ -58,7 +56,6 @@ export function AdminCheck({ children }: AdminCheckProps) {
         setIsChecking(false)
       } else {
         console.log("❌ Usuario no es administrador:", user.email)
-        console.log("📋 Emails de admin permitidos:", adminEmails)
         router.push("/")
       }
     }
