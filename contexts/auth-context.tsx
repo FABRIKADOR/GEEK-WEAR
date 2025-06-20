@@ -3,29 +3,43 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase-client"
 import { signToken, verifyToken } from "@/lib/jwt"
 import { secureStorage } from "@/lib/secure-storage"
 import { tabSync } from "@/lib/tab-sync"
 import type { User } from "@/types"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
+import supabase from "@/lib/supabase"
 
 interface AuthContextType {
-  user: User | null
+  user: SupabaseUser | null
   loading: boolean
+  signOut: () => Promise<void>
+  isAdmin: boolean
   token: string | null
   signIn: (email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signUp: (email: string, password: string, fullName?: string) => Promise<void>
-  signOut: () => Promise<void>
   setUser: (user: User | null) => void
   getToken: () => Promise<string | null>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  signOut: async () => {},
+  isAdmin: false,
+  token: null,
+  signIn: async () => {},
+  signInWithGoogle: async () => {},
+  signUp: async () => {},
+  setUser: () => {},
+  getToken: async () => null,
+})
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [token, setToken] = useState<string | null>(null)
   const router = useRouter()
 
@@ -95,130 +109,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    const checkSession = async () => {
+    // Obtener sesión inicial
+    const getInitialSession = async () => {
       try {
-        console.log(`[${tabSync.getTabId()}] Verificando sesión... (Líder: ${tabSync.getIsLeader()})`)
-
-        // Solo la pestaña líder maneja la autenticación inicial
-        if (!tabSync.getIsLeader()) {
-          console.log(`[${tabSync.getTabId()}] No soy líder, esperando sincronización...`)
-          setLoading(false)
-          return
-        }
-
-        // Limpiar cualquier token inválido primero
-        const cookieToken = getTokenFromCookie()
-        if (cookieToken && (cookieToken === "undefined" || cookieToken === "null")) {
-          clearTokenCookie()
-        }
-
-        // Verificar token JWT válido
-        if (cookieToken && cookieToken !== "undefined" && cookieToken !== "null") {
-          console.log(`[${tabSync.getTabId()}] Verificando token existente...`)
-          const payload = await verifyToken(cookieToken)
-          if (payload) {
-            console.log(`[${tabSync.getTabId()}] Token válido, estableciendo usuario:`, payload.email)
-            setUser(payload as User)
-            setToken(cookieToken)
-            tabSync.syncAuth({ user: payload, token: cookieToken })
-            setLoading(false)
-            return
-          } else {
-            console.log(`[${tabSync.getTabId()}] Token inválido, limpiando`)
-            // Token inválido, limpiar
-            clearTokenCookie()
-          }
-        }
-
-        // Fallback a Supabase session
-        console.log(`[${tabSync.getTabId()}] Verificando sesión de Supabase...`)
         const {
           data: { session },
         } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
 
-        if (session) {
-          console.log(`[${tabSync.getTabId()}] Sesión de Supabase encontrada:`, session.user.email)
-          // Verificar si el usuario es admin (puedes ajustar esta lógica según tu sistema)
-          const isAdmin = session.user.email === "hola@mail.com"
-
-          const userData = {
-            id: session.user.id,
-            email: session.user.email || "",
-            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
-            isAdmin: isAdmin,
-          }
-
-          // Crear JWT token
-          const jwtToken = await signToken(userData)
-          setTokenCookie(jwtToken)
-          setToken(jwtToken)
-          setUser(userData)
-          tabSync.syncAuth({ user: userData, token: jwtToken })
-          console.log(`[${tabSync.getTabId()}] Usuario establecido con nuevo token`)
-        } else {
-          console.log(`[${tabSync.getTabId()}] No hay sesión activa`)
+        if (session?.user) {
+          // Verificar si es admin
+          const adminEmails = ["hola@mail.com", "arianfabricioguilar@gmail.com"]
+          setIsAdmin(adminEmails.includes(session.user.email || ""))
         }
       } catch (error) {
-        console.error(`[${tabSync.getTabId()}] Error al verificar sesión:`, error)
-        // En caso de error, limpiar todo
-        clearTokenCookie()
-        setToken(null)
-        setUser(null)
+        console.error("Error getting session:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    checkSession()
+    getInitialSession()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log(`[${tabSync.getTabId()}] Cambio de estado de auth:`, event)
+    // Escuchar cambios de autenticación
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event)
+      setUser(session?.user ?? null)
 
-      // Solo la pestaña líder maneja los cambios de auth
-      if (!tabSync.getIsLeader()) {
-        return
+      if (session?.user) {
+        const adminEmails = ["hola@mail.com", "arianfabricioguilar@gmail.com"]
+        setIsAdmin(adminEmails.includes(session.user.email || ""))
+      } else {
+        setIsAdmin(false)
       }
 
-      if (event === "SIGNED_IN" && session) {
-        // Verificar si el usuario es admin (puedes ajustar esta lógica según tu sistema)
-        const isAdmin = session.user.email === "hola@mail.com"
-
-        const userData = {
-          id: session.user.id,
-          email: session.user.email || "",
-          full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || "",
-          isAdmin: isAdmin,
-        }
-
-        // Crear JWT token
-        const jwtToken = await signToken(userData)
-        setTokenCookie(jwtToken)
-        setToken(jwtToken)
-        setUser(userData)
-        tabSync.syncAuth({ user: userData, token: jwtToken })
-        console.log(`[${tabSync.getTabId()}] Usuario logueado:`, userData.email)
-
-        // Redirigir después del login con Google
-        if (typeof window !== "undefined") {
-          const redirect = localStorage.getItem("redirectAfterLogin") || "/"
-          localStorage.removeItem("redirectAfterLogin")
-          router.push(redirect)
-        }
-      } else if (event === "SIGNED_OUT") {
-        console.log(`[${tabSync.getTabId()}] Usuario deslogueado`)
-        // Limpiar token y datos seguros
-        clearTokenCookie()
-        secureStorage.clearSecureData()
-        setToken(null)
-        setUser(null)
-        tabSync.syncAuth({ user: null, token: null })
-      }
+      setLoading(false)
     })
 
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
-  }, [router])
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -234,20 +165,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.user) {
         // Verificar si el usuario es admin (puedes ajustar esta lógica según tu sistema)
-        const isAdmin = data.user.email === "hola@mail.com"
+        const isAdminCheck = data.user.email === "hola@mail.com"
 
         const userData = {
           id: data.user.id,
           email: data.user.email || "",
           full_name: data.user.user_metadata?.full_name || "",
-          isAdmin: isAdmin,
+          isAdmin: isAdminCheck,
         }
 
         // Crear JWT token
         const jwtToken = await signToken(userData)
         setTokenCookie(jwtToken)
         setToken(jwtToken)
-        setUser(userData)
+        setUser(data.user)
+        setIsAdmin(adminEmails.includes(data.user.email || ""))
         tabSync.syncAuth({ user: userData, token: jwtToken })
         console.log(`[${tabSync.getTabId()}] Sesión iniciada exitosamente`)
       }
@@ -313,6 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       secureStorage.clearSecureData()
       setToken(null)
       setUser(null)
+      setIsAdmin(false)
       tabSync.syncAuth({ user: null, token: null })
       router.push("/")
     } catch (error) {
@@ -323,16 +256,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const adminEmails = ["hola@mail.com", "arianfabricioguilar@gmail.com"]
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      setIsAdmin(false)
+      window.location.href = "/"
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
+        signOut,
+        isAdmin,
         token,
         signIn: handleSignIn,
         signInWithGoogle: handleSignInWithGoogle,
         signUp: handleSignUp,
-        signOut: handleSignOut,
         setUser,
         getToken,
       }}
@@ -342,10 +289,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth debe ser usado dentro de un AuthProvider")
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }

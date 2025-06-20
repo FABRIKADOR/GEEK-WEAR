@@ -1,8 +1,25 @@
-import { supabase } from "./supabase-client"
+import { createClient } from "@supabase/supabase-js"
 
-// Eliminar los logs de consola que pueden estar causando problemas
-// console.log("Supabase URL defined:", !!supabaseUrl)
-// console.log("Supabase Anon Key defined:", !!supabaseAnonKey)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Crear una sola instancia global
+let supabaseInstance: ReturnType<typeof createClient> | null = null
+
+function getSupabaseClient() {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
+  }
+  return supabaseInstance
+}
+
+const supabase = getSupabaseClient()
 
 export default supabase
 
