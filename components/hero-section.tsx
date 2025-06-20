@@ -9,70 +9,29 @@ import type { ProductWithDetails } from "@/types"
 
 export default function HeroSection() {
   const [products, setProducts] = useState<ProductWithDetails[]>([])
-  const [productImages, setProductImages] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Obtener productos y filtrar imágenes válidas
+  // Obtener solo estadísticas básicas
   useEffect(() => {
-    async function fetchProductsAndImages() {
+    async function fetchProducts() {
       try {
         setLoading(true)
-        console.log("🔍 Cargando juegos e imágenes...")
+        console.log("🔍 Cargando estadísticas...")
 
-        // Obtener solo 20 productos para evitar sobrecarga
-        const { data: productsData } = await getProducts(20, 1)
-        console.log("🎮 Juegos obtenidos:", productsData.length)
+        // Obtener solo 10 productos para estadísticas
+        const { data: productsData } = await getProducts(10, 1)
+        console.log("🎮 Productos obtenidos:", productsData.length)
         setProducts(productsData)
-
-        // Filtrar y recopilar solo las primeras 10 imágenes válidas
-        const validImages: string[] = []
-
-        for (const product of productsData) {
-          if (validImages.length >= 10) break // Limitar a 10 imágenes
-
-          // Agregar imagen principal del producto si existe y es válida
-          if (product.image_url && isValidImageUrl(product.image_url)) {
-            validImages.push(product.image_url)
-          }
-
-          // Agregar solo la primera imagen adicional si existe
-          if (validImages.length < 10 && product.images && product.images.length > 0) {
-            const firstImage = product.images[0]
-            const imageUrl = firstImage.url || firstImage.image_url
-            if (imageUrl && isValidImageUrl(imageUrl) && !validImages.includes(imageUrl)) {
-              validImages.push(imageUrl)
-            }
-          }
-        }
-
-        console.log("🖼️ Imágenes válidas encontradas:", validImages.length)
-        setProductImages(validImages)
       } catch (error) {
-        console.error("💥 Error al cargar juegos:", error)
-        setProductImages([])
+        console.error("💥 Error al cargar productos:", error)
+        setProducts([])
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProductsAndImages()
+    fetchProducts()
   }, [])
-
-  // Función para validar URLs de imágenes
-  const isValidImageUrl = (url: string): boolean => {
-    if (!url || url.trim() === "") return false
-    if (url.includes("placeholder")) return false
-    if (url.includes("undefined") || url.includes("null")) return false
-
-    // Verificar que tenga una extensión de imagen válida
-    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"]
-    const hasValidExtension = imageExtensions.some((ext) => url.toLowerCase().includes(ext))
-
-    return hasValidExtension || url.startsWith("http")
-  }
-
-  // Solo duplicar una vez para el efecto infinito
-  const infiniteImages = [...productImages, ...productImages]
 
   // Obtener categorías únicas de los productos
   const getUniqueCategories = () => {
@@ -108,55 +67,28 @@ export default function HeroSection() {
 
   return (
     <section className="relative bg-gradient-to-br from-deep-space via-dark-slate to-midnight-blue text-white overflow-hidden min-h-[80vh] sm:min-h-[90vh] flex items-center w-full">
-      {/* Efectos de fondo gaming simplificados */}
+      {/* Efectos de fondo estáticos y simples */}
       <div className="absolute inset-0 z-0 w-full">
-        {/* Grid pattern más sutil */}
+        {/* Grid pattern estático */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(0,212,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,212,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]"></div>
 
-        {/* Glowing orbs reducidos */}
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-cyber-blue/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-neon-green/3 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+        {/* Efectos de luz estáticos */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-cyber-blue/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neon-green/3 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-electric-purple/5 rounded-full blur-3xl"></div>
 
-        {/* Overlay mejorado para mejor legibilidad */}
+        {/* Overlay para legibilidad */}
         <div className="absolute inset-0 bg-gradient-to-r from-deep-space/90 via-dark-slate/70 to-midnight-blue/90 z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-deep-space/70 via-transparent to-dark-slate/90 z-10"></div>
 
-        {/* Slider infinito simplificado */}
-        {productImages.length > 0 && (
-          <div className="absolute inset-0 opacity-30">
-            {/* Solo 2 filas en lugar de 5 */}
-            {Array.from({ length: 2 }).map((_, rowIndex) => (
-              <div
-                key={rowIndex}
-                className="flex h-1/2 w-full overflow-hidden"
-                style={{
-                  animation: `slideInfinite ${30 + rowIndex * 10}s linear infinite`,
-                  animationDirection: rowIndex % 2 === 0 ? "normal" : "reverse",
-                }}
-              >
-                {infiniteImages.map((imageUrl, index) => (
-                  <div
-                    key={`${rowIndex}-${index}`}
-                    className="flex-shrink-0 w-24 sm:w-32 h-full relative overflow-hidden mx-1 rounded-lg opacity-60"
-                  >
-                    <img
-                      src={imageUrl || "/placeholder.svg"}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.style.display = "none"
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Elementos decorativos estáticos */}
+        <div className="absolute inset-0 z-5">
+          <div className="absolute top-20 left-10 w-2 h-2 bg-cyber-blue/30 rounded-full"></div>
+          <div className="absolute top-40 right-20 w-1 h-1 bg-neon-green/40 rounded-full"></div>
+          <div className="absolute bottom-32 left-1/3 w-1.5 h-1.5 bg-electric-purple/30 rounded-full"></div>
+          <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-cyber-blue/20 rounded-full"></div>
+          <div className="absolute bottom-20 right-10 w-2 h-2 bg-neon-green/20 rounded-full"></div>
+        </div>
       </div>
 
       {/* Contenido principal */}
@@ -181,12 +113,11 @@ export default function HeroSection() {
 
           {/* Subtítulo */}
           <p className="text-sm sm:text-lg md:text-xl lg:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed text-gray-300 font-light px-2">
-            Descubre nuestra colección de{" "}
-            <span className="text-cyber-blue font-semibold">{products.length}+ juegos únicos</span>, membresías premium
-            y contenido exclusivo para <span className="text-neon-green font-semibold">verdaderos gamers</span>
+            Descubre nuestra increíble colección de juegos, membresías premium y contenido exclusivo para{" "}
+            <span className="text-neon-green font-semibold">verdaderos gamers</span>
           </p>
 
-          {/* Botones */}
+          {/* Botones principales */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-2">
             <Button
               asChild
@@ -212,7 +143,7 @@ export default function HeroSection() {
             </Button>
           </div>
 
-          {/* Categorías */}
+          {/* Categorías disponibles */}
           {categories.length > 0 && (
             <div className="mb-12 sm:mb-16 px-2">
               <p className="text-xs sm:text-sm text-gray-400 mb-3 sm:mb-4 font-medium tracking-wide uppercase">
@@ -231,11 +162,11 @@ export default function HeroSection() {
             </div>
           )}
 
-          {/* Estadísticas */}
+          {/* Estadísticas principales */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
             <div className="group text-center backdrop-blur-md bg-cyber-blue/5 rounded-2xl p-4 sm:p-6 border border-cyber-blue/20 hover:bg-cyber-blue/10 hover:border-cyber-blue/40 transition-all duration-300 hover:shadow-lg hover:shadow-cyber-blue/20">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 group-hover:text-cyber-blue transition-colors">
-                {products.length}+
+                500+
               </div>
               <div className="text-xs sm:text-sm text-gray-400 font-medium tracking-wide uppercase flex items-center justify-center gap-1">
                 <Gamepad2 className="w-3 h-3" />
@@ -244,16 +175,16 @@ export default function HeroSection() {
             </div>
             <div className="group text-center backdrop-blur-md bg-neon-green/5 rounded-2xl p-4 sm:p-6 border border-neon-green/20 hover:bg-neon-green/10 hover:border-neon-green/40 transition-all duration-300 hover:shadow-lg hover:shadow-neon-green/20">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 group-hover:text-neon-green transition-colors">
-                {productImages.length}
+                24/7
               </div>
               <div className="text-xs sm:text-sm text-gray-400 font-medium tracking-wide uppercase flex items-center justify-center gap-1">
                 <Zap className="w-3 h-3" />
-                Contenido Premium
+                Entrega Instantánea
               </div>
             </div>
             <div className="group text-center backdrop-blur-md bg-electric-purple/5 rounded-2xl p-4 sm:p-6 border border-electric-purple/20 hover:bg-electric-purple/10 hover:border-electric-purple/40 transition-all duration-300 hover:shadow-lg hover:shadow-electric-purple/20">
               <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2 group-hover:text-electric-purple transition-colors">
-                {categories.length}+
+                10+
               </div>
               <div className="text-xs sm:text-sm text-gray-400 font-medium tracking-wide uppercase flex items-center justify-center gap-1">
                 <Trophy className="w-3 h-3" />
@@ -261,19 +192,15 @@ export default function HeroSection() {
               </div>
             </div>
           </div>
+
+          {/* Indicador de scroll sutil */}
+          <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hidden sm:block">
+            <div className="w-6 h-10 border-2 border-cyber-blue/50 rounded-full flex justify-center">
+              <div className="w-1 h-3 bg-cyber-blue/70 rounded-full mt-2 animate-pulse"></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes slideInfinite {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-      `}</style>
     </section>
   )
 }
