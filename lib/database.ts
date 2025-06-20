@@ -19,7 +19,7 @@ export async function getProducts(
       .select(
         `
     *,
-    categories(id, name, slug, description),
+    categories!inner(id, name, slug, description, is_visible),
     images:product_images(*),
     product_franchises(
       franchise_id,
@@ -29,6 +29,7 @@ export async function getProducts(
         { count: "exact" },
       )
       .eq("is_active", true)
+      .eq("categories.is_visible", true) // Solo productos de categorías visibles
       .order("created_at", { ascending: false })
 
     // Aplicar filtros
@@ -94,7 +95,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithDetails
       .select(
         `
   *,
-  categories(id, name, slug, description),
+  categories!inner(id, name, slug, description, is_visible),
   images:product_images(*),
   product_franchises(
     franchise_id,
@@ -104,6 +105,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithDetails
       )
       .eq("slug", slug)
       .eq("is_active", true)
+      .eq("categories.is_visible", true) // Solo productos de categorías visibles
       .single()
 
     if (error) {
@@ -134,7 +136,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
       .select(
         `
   *,
-  categories(id, name, slug, description),
+  categories!inner(id, name, slug, description, is_visible),
   images:product_images(*),
   product_franchises(
     franchise_id,
@@ -143,6 +145,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
   `,
       )
       .eq("id", id)
+      .eq("categories.is_visible", true) // Solo productos de categorías visibles
       .single()
 
     if (error) {
@@ -166,7 +169,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
   }
 }
 
-// Categories
+// Categories - Función para admin (todas las categorías)
 export async function getCategories(): Promise<Category[]> {
   try {
     console.log("Fetching categories from database...")
@@ -185,9 +188,33 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
+// Nueva función para frontend público (solo categorías visibles)
+export async function getVisibleCategories(): Promise<Category[]> {
+  try {
+    console.log("Fetching visible categories from database...")
+    const { data, error } = await supabase.from("categories").select("*").eq("is_visible", true).order("name")
+
+    if (error) {
+      console.error("Error al obtener categorías visibles:", error)
+      return []
+    }
+
+    console.log(`Found ${data.length} visible categories`)
+    return data as Category[]
+  } catch (error) {
+    console.error("Error inesperado al obtener categorías visibles:", error)
+    return []
+  }
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
-    const { data, error } = await supabase.from("categories").select("*").eq("slug", slug).single()
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_visible", true) // Solo categorías visibles
+      .single()
 
     if (error) {
       console.error("Error al obtener categoría:", error)
