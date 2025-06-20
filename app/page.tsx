@@ -5,37 +5,64 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
-import ProductsContainer from "@/components/products-container"
+import { getProducts } from "@/lib/database"
+import ProductCard from "@/components/product-card"
 
-// Componente de carga estático para evitar re-renders
-function ProductsSection() {
-  return (
-    <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
-          <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
+// Server Component para productos - NO client-side
+async function FeaturedProductsServer() {
+  try {
+    // Intentar productos destacados primero
+    const { data: featuredProducts } = await getProducts(8, 1, undefined, undefined, true)
+
+    if (featuredProducts && featuredProducts.length > 0) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
+      )
+    }
 
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
-                  <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
-                  <div className="bg-gray-600 h-4 rounded mb-2"></div>
-                  <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
-                  <div className="bg-gray-600 h-6 rounded w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          }
-        >
-          <ProductsContainer />
-        </Suspense>
+    // Fallback a productos recientes
+    const { data: recentProducts } = await getProducts(8, 1)
+
+    if (recentProducts && recentProducts.length > 0) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {recentProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )
+    }
+
+    // Si no hay productos, mostrar mensaje
+    return (
+      <div className="text-center py-12">
+        <div className="bg-cyber-blue/10 border border-cyber-blue/20 rounded-lg p-8 max-w-md mx-auto">
+          <h3 className="text-2xl font-bold text-cyber-blue mb-4">¡Próximamente!</h3>
+          <p className="text-gray-300 mb-6">Estamos preparando una increíble selección de juegos para ti.</p>
+          <Link href="/productos">
+            <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Explorar Catálogo</Button>
+          </Link>
+        </div>
       </div>
-    </section>
-  )
+    )
+  } catch (error) {
+    console.error("Error loading products:", error)
+    return (
+      <div className="text-center py-12">
+        <div className="bg-cyber-blue/10 border border-cyber-blue/20 rounded-lg p-8 max-w-md mx-auto">
+          <h3 className="text-2xl font-bold text-cyber-blue mb-4">¡Próximamente!</h3>
+          <p className="text-gray-300 mb-6">Estamos preparando una increíble selección de juegos para ti.</p>
+          <Link href="/productos">
+            <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Explorar Catálogo</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 }
 
 export default function HomePage() {
@@ -136,7 +163,31 @@ export default function HomePage() {
       </section>
 
       {/* Productos Destacados */}
-      <ProductsSection />
+      <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
+            <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
+          </div>
+
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
+                    <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
+                    <div className="bg-gray-600 h-4 rounded mb-2"></div>
+                    <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
+                    <div className="bg-gray-600 h-6 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            <FeaturedProductsServer />
+          </Suspense>
+        </div>
+      </section>
 
       {/* Plataformas Populares */}
       <section className="py-16 bg-midnight-blue">
