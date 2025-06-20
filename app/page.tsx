@@ -8,14 +8,15 @@ import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
 import FeaturedProducts from "@/components/featured-products"
 import ProductCard from "@/components/product-card"
+import ProductsFallback from "@/components/products-fallback"
 
 export default async function HomePage() {
-  // Obtener SOLO productos destacados directamente (solo de categorías visibles)
-  const { data: featuredProducts } = await getProducts(50, 1, undefined, undefined, true) // featured: true
+  // Obtener productos para destacados - sin filtro restrictivo
+  const { data: featuredProducts } = await getProducts(12, 1) // Sin filtro de featured
   console.log("Featured products from database:", featuredProducts.length)
 
-  // Obtener productos recientes (sin filtro de destacados, solo de categorías visibles)
-  const { data: recentProducts } = await getProducts(8, 1, undefined, undefined, false) // featured: false o undefined
+  // Obtener productos recientes - remover filtros restrictivos
+  const { data: recentProducts } = await getProducts(8, 1) // Sin filtros adicionales
 
   // Obtener solo categorías visibles
   const categories = await getVisibleCategories()
@@ -227,13 +228,15 @@ export default async function HomePage() {
           </div>
 
           <Suspense fallback={<div className="text-center py-12 text-gray-300">Cargando juegos...</div>}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {recentProducts.length > 0 ? (
-                recentProducts.map((product) => <ProductCard key={product.id} product={product} />)
-              ) : (
-                <div className="col-span-full text-center py-8 text-gray-300">No hay juegos disponibles</div>
-              )}
-            </div>
+            {recentProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {recentProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <ProductsFallback />
+            )}
           </Suspense>
         </div>
       </section>
