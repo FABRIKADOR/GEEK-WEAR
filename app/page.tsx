@@ -7,9 +7,25 @@ import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
 import ProductsContainer from "@/components/products-container"
 
+// Componente de carga simple
+function LoadingSection() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      {[...Array(8)].map((_, i) => (
+        <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
+          <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
+          <div className="bg-gray-600 h-4 rounded mb-2"></div>
+          <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
+          <div className="bg-gray-600 h-6 rounded w-1/2"></div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function HomePage() {
   return (
-    <main className="bg-dark-slate">
+    <main className="bg-dark-slate min-h-screen">
       <HeroSection />
 
       {/* Categorías Principales */}
@@ -104,7 +120,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Productos Destacados - Carga del lado del cliente */}
+      {/* Productos Destacados */}
       <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -112,19 +128,7 @@ export default function HomePage() {
             <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
           </div>
 
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
-                    <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
-                    <div className="bg-gray-600 h-4 rounded mb-2"></div>
-                    <div className="bg-gray-600 h-4 rounded w-2/3"></div>
-                  </div>
-                ))}
-              </div>
-            }
-          >
+          <Suspense fallback={<LoadingSection />}>
             <ProductsContainer />
           </Suspense>
         </div>

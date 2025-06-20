@@ -18,13 +18,19 @@ export default function ProductsContainer() {
         setLoading(true)
         setError(null)
 
+        console.log("🔍 ProductsContainer: Iniciando carga de productos...")
+
         // Intentar cargar productos destacados primero
         const { data: featuredProducts, error: featuredError } = await getProducts(8, 1, undefined, undefined, true)
 
+        console.log("📊 Productos destacados:", { data: featuredProducts, error: featuredError })
+
         if (featuredError) {
-          console.error("Error loading featured products:", featuredError)
+          console.warn("⚠️ Error cargando productos destacados:", featuredError)
           // Si falla, intentar cargar productos recientes
           const { data: recentProducts, error: recentError } = await getProducts(8, 1)
+
+          console.log("📊 Productos recientes:", { data: recentProducts, error: recentError })
 
           if (recentError) {
             throw new Error("No se pudieron cargar los productos")
@@ -34,23 +40,29 @@ export default function ProductsContainer() {
         } else {
           // Si hay productos destacados, usarlos
           if (featuredProducts && featuredProducts.length > 0) {
+            console.log("✅ Usando productos destacados:", featuredProducts.length)
             setProducts(featuredProducts)
           } else {
+            console.log("📝 No hay productos destacados, cargando recientes...")
             // Si no hay productos destacados, cargar productos recientes
             const { data: recentProducts } = await getProducts(8, 1)
+            console.log("📊 Productos recientes obtenidos:", recentProducts?.length || 0)
             setProducts(recentProducts || [])
           }
         }
       } catch (err) {
-        console.error("Error in loadProducts:", err)
+        console.error("❌ Error en loadProducts:", err)
         setError("Error al cargar productos")
       } finally {
         setLoading(false)
+        console.log("🏁 ProductsContainer: Carga finalizada")
       }
     }
 
     loadProducts()
   }, [])
+
+  console.log("🎯 ProductsContainer render:", { loading, error, productsCount: products.length })
 
   if (loading) {
     return (
