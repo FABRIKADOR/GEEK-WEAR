@@ -1,133 +1,73 @@
 "use client"
-
-import Link from "next/link"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useSearchParams } from "next/navigation"
 
 interface PaginationControlsProps {
   currentPage: number
   totalPages: number
-  baseUrl: string
-  categoryId?: string
-  franchiseId?: string
-  searchQuery?: string
 }
 
-export function PaginationControls({
-  currentPage,
-  totalPages,
-  baseUrl,
-  categoryId,
-  franchiseId,
-  searchQuery,
-}: PaginationControlsProps) {
-  // Build the URL with all parameters
-  const buildUrl = (page: number) => {
+export function PaginationControls({ currentPage, totalPages }: PaginationControlsProps) {
+  const searchParams = useSearchParams()
+
+  const createPageUrl = (page: number) => {
     const params = new URLSearchParams()
 
-    params.set("page", page.toString())
-
-    if (categoryId) {
-      params.set("category", categoryId)
+    // Solo agregar parámetros si tienen valores válidos
+    if (page > 1) {
+      params.set("page", page.toString())
     }
 
-    if (franchiseId) {
-      params.set("franchise", franchiseId)
+    if (searchParams.get("category")) {
+      params.set("category", searchParams.get("category")!)
     }
 
-    if (searchQuery) {
-      params.set("q", searchQuery)
+    if (searchParams.get("franchise")) {
+      params.set("franchise", searchParams.get("franchise")!)
     }
 
-    return `${baseUrl}?${params.toString()}`
+    if (searchParams.get("q")) {
+      params.set("q", searchParams.get("q")!)
+    }
+
+    const queryString = params.toString()
+    const currentPath = window.location.pathname
+
+    return queryString ? `${currentPath}?${queryString}` : currentPath
   }
 
-  // Generate page numbers to display
   const getPageNumbers = () => {
     const pageNumbers = []
-
-    // Always include first page
-    pageNumbers.push(1)
-
-    // Add pages around current page
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    for (let i = 1; i <= totalPages; i++) {
       pageNumbers.push(i)
     }
-
-    // Always include last page if there is more than one page
-    if (totalPages > 1) {
-      pageNumbers.push(totalPages)
-    }
-
-    // Add ellipsis indicators
-    const result = []
-    let prevPage = 0
-
-    for (const page of pageNumbers) {
-      if (page - prevPage > 1) {
-        result.push(-prevPage) // Negative numbers represent ellipsis after this page
-      }
-      result.push(page)
-      prevPage = page
-    }
-
-    return result
+    return pageNumbers
   }
 
-  const pageNumbers = getPageNumbers()
-
   return (
-    <div className="flex items-center justify-center space-x-2">
-      <Button variant="outline" size="icon" disabled={currentPage === 1} asChild={currentPage !== 1}>
-        {currentPage === 1 ? (
-          <span>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous Page</span>
-          </span>
-        ) : (
-          <Link href={buildUrl(currentPage - 1)}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="sr-only">Previous Page</span>
-          </Link>
-        )}
-      </Button>
+    <div className="flex justify-center mt-4">
+      {currentPage > 1 && (
+        <a href={createPageUrl(currentPage - 1)} className="px-4 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">
+          Anterior
+        </a>
+      )}
 
-      {pageNumbers.map((page, index) => {
-        // Ellipsis
-        if (page < 0) {
-          return (
-            <span key={`ellipsis-${index}`} className="px-2">
-              ...
-            </span>
-          )
-        }
+      {getPageNumbers().map((page) => (
+        <a
+          key={page}
+          href={createPageUrl(page)}
+          className={`px-4 py-2 mx-1 rounded ${
+            page === currentPage ? "bg-blue-500 text-white" : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          {page}
+        </a>
+      ))}
 
-        // Regular page
-        return (
-          <Button
-            key={page}
-            variant={page === currentPage ? "default" : "outline"}
-            size="icon"
-            asChild={page !== currentPage}
-          >
-            {page === currentPage ? <span>{page}</span> : <Link href={buildUrl(page)}>{page}</Link>}
-          </Button>
-        )
-      })}
-
-      <Button variant="outline" size="icon" disabled={currentPage === totalPages} asChild={currentPage !== totalPages}>
-        {currentPage === totalPages ? (
-          <span>
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next Page</span>
-          </span>
-        ) : (
-          <Link href={buildUrl(currentPage + 1)}>
-            <ChevronRight className="h-4 w-4" />
-            <span className="sr-only">Next Page</span>
-          </Link>
-        )}
-      </Button>
+      {currentPage < totalPages && (
+        <a href={createPageUrl(currentPage + 1)} className="px-4 py-2 mx-1 bg-gray-200 rounded hover:bg-gray-300">
+          Siguiente
+        </a>
+      )}
     </div>
   )
 }
