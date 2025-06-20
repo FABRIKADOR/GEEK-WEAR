@@ -23,6 +23,7 @@ export default function Header() {
   const cart = useCartStore((state) => state.cart)
   const itemCount = cart.items.reduce((total, item) => total + item.quantity, 0)
   const { openCart } = useCartSidebar()
+  const [loading, setLoading] = useState(false)
 
   // Cerrar dropdown cuando se hace clic fuera
   useEffect(() => {
@@ -113,14 +114,47 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
+      setLoading(true)
+      console.log("Iniciando cierre de sesión...")
+
       const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      if (error) {
+        console.error("Error en signOut:", error)
+        // Forzar limpieza local aunque falle el servidor
+      }
+
+      // Limpiar estado local siempre
       setUser(null)
       setIsAdmin(false)
       setIsProfileOpen(false)
+
+      // Limpiar localStorage y cookies
+      if (typeof window !== "undefined") {
+        localStorage.clear()
+        // Limpiar todas las cookies
+        document.cookie.split(";").forEach((c) => {
+          const eqPos = c.indexOf("=")
+          const name = eqPos > -1 ? c.substr(0, eqPos) : c
+          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/"
+        })
+      }
+
+      // Redirigir siempre
       router.push("/")
+
+      // Forzar recarga para limpiar completamente el estado
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 100)
     } catch (error) {
-      console.error("Error signing out:", error)
+      console.error("Error en handleSignOut:", error)
+      // Forzar limpieza y redirección incluso si hay error
+      setUser(null)
+      setIsAdmin(false)
+      setIsProfileOpen(false)
+      window.location.href = "/"
+    } finally {
+      setLoading(false)
     }
   }
 

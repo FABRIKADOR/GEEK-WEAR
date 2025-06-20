@@ -1,80 +1,13 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { getProducts } from "@/lib/database"
 import HeroSection from "@/components/hero-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
-import FeaturedProducts from "@/components/featured-products"
-import ProductCard from "@/components/product-card"
+import ProductsContainer from "@/components/products-container"
 
-// Componente para manejar la carga de productos de forma segura
-async function ProductsSection() {
-  try {
-    // Obtener productos destacados primero
-    const { data: featuredProducts } = await getProducts(6, 1, undefined, undefined, true)
-    console.log("Featured products loaded:", featuredProducts.length)
-
-    // Si no hay productos destacados, obtener productos recientes
-    let productsToShow = featuredProducts
-    if (featuredProducts.length === 0) {
-      const { data: recentProducts } = await getProducts(6, 1)
-      productsToShow = recentProducts
-      console.log("Recent products loaded:", recentProducts.length)
-    }
-
-    if (productsToShow.length > 0) {
-      return <FeaturedProducts products={productsToShow} />
-    }
-  } catch (error) {
-    console.error("Error loading products:", error)
-  }
-
-  // Fallback si no hay productos o hay error
-  return (
-    <div className="w-full px-4 py-8 sm:py-12 lg:py-16 text-center">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-4">Productos Destacados</h2>
-        <p className="text-sm sm:text-base text-white/80 px-2">No hay productos disponibles en este momento</p>
-        <Link href="/admin/productos/nuevo" className="inline-block mt-4">
-          <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Agregar Productos</Button>
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-// Componente para productos recientes
-async function RecentProductsSection() {
-  try {
-    const { data: recentProducts } = await getProducts(8, 1)
-    console.log("Recent products for section:", recentProducts.length)
-
-    if (recentProducts.length > 0) {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {recentProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )
-    }
-  } catch (error) {
-    console.error("Error loading recent products:", error)
-  }
-
-  return (
-    <div className="text-center py-8 text-gray-300">
-      <p>No hay productos disponibles</p>
-      <Link href="/admin/productos/nuevo" className="inline-block mt-4">
-        <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Agregar Productos</Button>
-      </Link>
-    </div>
-  )
-}
-
-export default async function HomePage() {
+export default function HomePage() {
   return (
     <main className="bg-dark-slate">
       <HeroSection />
@@ -94,59 +27,59 @@ export default async function HomePage() {
                 icon: <Gamepad2 className="w-8 h-8" />,
                 color: "from-cyber-blue to-neon-green",
                 count: "500+",
-                slug: "aaa-games",
+                href: "/productos?category=1",
               },
               {
                 name: "Membresías",
                 icon: <Crown className="w-8 h-8" />,
                 color: "from-electric-purple to-cyber-blue",
                 count: "25+",
-                slug: "memberships",
+                href: "/productos?category=2",
               },
               {
                 name: "DLCs",
                 icon: <Gift className="w-8 h-8" />,
                 color: "from-neon-green to-electric-purple",
                 count: "200+",
-                slug: "dlc",
+                href: "/productos?category=3",
               },
               {
                 name: "Indie Games",
                 icon: <Star className="w-8 h-8" />,
                 color: "from-gaming-orange to-plasma-pink",
                 count: "150+",
-                slug: "indie",
+                href: "/productos?category=4",
               },
               {
                 name: "PC Gaming",
                 icon: <Monitor className="w-8 h-8" />,
                 color: "from-cyber-blue to-gaming-orange",
                 count: "300+",
-                slug: "pc",
+                href: "/productos",
               },
               {
                 name: "Mobile",
                 icon: <Smartphone className="w-8 h-8" />,
                 color: "from-neon-green to-plasma-pink",
                 count: "75+",
-                slug: "mobile",
+                href: "/productos",
               },
               {
                 name: "Retro",
                 icon: <Trophy className="w-8 h-8" />,
                 color: "from-electric-purple to-neon-green",
                 count: "100+",
-                slug: "retro",
+                href: "/productos",
               },
               {
                 name: "VR Games",
                 icon: <Zap className="w-8 h-8" />,
                 color: "from-gaming-orange to-cyber-blue",
                 count: "50+",
-                slug: "vr",
+                href: "/productos",
               },
             ].map((category, index) => (
-              <Link key={index} href={`/products?q=${category.slug}`} className="group">
+              <Link key={index} href={category.href} className="group">
                 <Card className="h-full hover:shadow-lg hover:shadow-cyber-blue/20 transition-all duration-300 group-hover:scale-105 bg-midnight-blue/50 border-cyber-blue/20 backdrop-blur-sm">
                   <CardContent className="p-6 text-center">
                     <div
@@ -171,22 +104,28 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Productos Destacados */}
+      {/* Productos Destacados - Carga del lado del cliente */}
       <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
+            <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
+          </div>
+
           <Suspense
             fallback={
-              <div className="w-full px-4 py-8 sm:py-12 lg:py-16 text-center">
-                <div className="max-w-4xl mx-auto">
-                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-4">
-                    Cargando Productos...
-                  </h2>
-                  <p className="text-sm sm:text-base text-white/80 px-2">Obteniendo los mejores juegos</p>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
+                    <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
+                    <div className="bg-gray-600 h-4 rounded mb-2"></div>
+                    <div className="bg-gray-600 h-4 rounded w-2/3"></div>
+                  </div>
+                ))}
               </div>
             }
           >
-            <ProductsSection />
+            <ProductsContainer />
           </Suspense>
         </div>
       </section>
@@ -201,14 +140,14 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {[
-              { name: "Steam", logo: "🎮", bg: "bg-cyber-blue", search: "steam" },
-              { name: "Epic Games", logo: "🚀", bg: "bg-neon-green", search: "epic" },
-              { name: "PlayStation", logo: "🎯", bg: "bg-electric-purple", search: "playstation" },
-              { name: "Xbox", logo: "🎪", bg: "bg-gaming-orange", search: "xbox" },
-              { name: "Nintendo", logo: "🎨", bg: "bg-plasma-pink", search: "nintendo" },
-              { name: "Mobile", logo: "📱", bg: "bg-volt-yellow", search: "mobile" },
+              { name: "Steam", logo: "🎮", bg: "bg-cyber-blue", href: "/productos" },
+              { name: "Epic Games", logo: "🚀", bg: "bg-neon-green", href: "/productos" },
+              { name: "PlayStation", logo: "🎯", bg: "bg-electric-purple", href: "/productos" },
+              { name: "Xbox", logo: "🎪", bg: "bg-gaming-orange", href: "/productos" },
+              { name: "Nintendo", logo: "🎨", bg: "bg-plasma-pink", href: "/productos" },
+              { name: "Mobile", logo: "📱", bg: "bg-volt-yellow", href: "/productos" },
             ].map((platform, index) => (
-              <Link key={index} href={`/products?q=${platform.search}`} className="group">
+              <Link key={index} href={platform.href} className="group">
                 <Card className="hover:shadow-lg hover:shadow-cyber-blue/20 transition-all duration-300 group-hover:scale-105 bg-dark-slate/50 border-cyber-blue/20 backdrop-blur-sm">
                   <CardContent className="p-6 text-center">
                     <div
@@ -241,7 +180,7 @@ export default async function HomePage() {
                 <Zap className="w-12 h-12 mx-auto mb-4 text-volt-yellow animate-pulse" />
                 <h3 className="text-xl font-bold mb-2">Flash Sale</h3>
                 <p className="mb-4">70% OFF en juegos seleccionados</p>
-                <Link href="/products?q=sale&discount=true">
+                <Link href="/productos">
                   <Button variant="secondary" className="bg-white text-gaming-orange hover:bg-gray-100 font-bold">
                     Ver Ofertas
                   </Button>
@@ -254,7 +193,7 @@ export default async function HomePage() {
                 <Heart className="w-12 h-12 mx-auto mb-4 text-plasma-pink animate-pulse" />
                 <h3 className="text-xl font-bold mb-2">Bundle Gamer</h3>
                 <p className="mb-4">Compra 2 juegos y llévate el 3ro gratis</p>
-                <Link href="/products?bundle=true">
+                <Link href="/productos">
                   <Button variant="secondary" className="bg-white text-gaming-orange hover:bg-gray-100 font-bold">
                     Explorar
                   </Button>
@@ -267,7 +206,7 @@ export default async function HomePage() {
                 <Crown className="w-12 h-12 mx-auto mb-4 text-volt-yellow animate-pulse" />
                 <h3 className="text-xl font-bold mb-2">Membresía Premium</h3>
                 <p className="mb-4">Acceso ilimitado por solo $9.99/mes</p>
-                <Link href="/products?premium=true">
+                <Link href="/productos">
                   <Button variant="secondary" className="bg-white text-gaming-orange hover:bg-gray-100 font-bold">
                     Suscribirse
                   </Button>
@@ -275,27 +214,6 @@ export default async function HomePage() {
               </CardContent>
             </Card>
           </div>
-        </div>
-      </section>
-
-      {/* Últimos Productos */}
-      <section className="py-16 bg-dark-slate">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center mb-12">
-            <div>
-              <h2 className="text-4xl font-bold mb-2 text-white">Últimos Lanzamientos</h2>
-              <p className="text-xl text-gray-300">Descubre los juegos más recientes</p>
-            </div>
-            <Link href="/products">
-              <Button size="lg" className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">
-                Ver Todos
-              </Button>
-            </Link>
-          </div>
-
-          <Suspense fallback={<div className="text-center py-12 text-gray-300">Cargando juegos...</div>}>
-            <RecentProductsSection />
-          </Suspense>
         </div>
       </section>
 
