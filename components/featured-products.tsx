@@ -1,60 +1,51 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { getProducts } from "../api/products"
-import ProductCard from "./product-card"
-import Loader from "./loader"
+import FeaturedProductsCarousel from "./featured-products-carousel"
 
-const FeaturedProducts = () => {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true)
-        // Cambiar para obtener todos los productos activos, no solo los destacados
-        const { data: productsData } = await getProducts(12, 1, {
-          is_active: true,
-          // Remover el filtro de featured: true para mostrar todos los productos
-        })
-
-        if (productsData && productsData.length > 0) {
-          setProducts(productsData)
-        } else {
-          console.log("No se encontraron productos")
-        }
-      } catch (error) {
-        console.error("Error al cargar productos:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProducts()
-  }, [])
-
-  return (
-    <div className="bg-gray-900 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Últimos Lanzamientos</h2>
-          <p className="text-gray-400 mb-8">Descubre los juegos más recientes</p>
-        </div>
-        {loading ? (
-          <div className="flex justify-center">
-            <Loader />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+interface Product {
+  id: string
+  name: string
+  slug: string
+  price: number
+  compare_at_price?: number
+  image_url?: string
+  images?: Array<{ url: string; is_primary?: boolean }>
+  categories?: { name: string }
+  featured?: boolean
 }
 
-export default FeaturedProducts
+interface FeaturedProductsProps {
+  products: Product[]
+}
+
+export default function FeaturedProducts({ products }: FeaturedProductsProps) {
+  console.log("Total products received:", products.length)
+  console.log(
+    "Products data:",
+    products.map((p) => ({ name: p.name, featured: p.featured })),
+  )
+
+  // Si no hay productos destacados, mostrar los primeros 6 productos disponibles
+  let productsToShow = products.filter((product) => product.featured === true)
+
+  if (productsToShow.length === 0) {
+    console.log("No featured products found, showing first 6 products")
+    productsToShow = products.slice(0, 6)
+  }
+
+  console.log("Final products to show:", productsToShow.length)
+
+  // Si no hay productos en absoluto, mostrar mensaje
+  if (!productsToShow || productsToShow.length === 0) {
+    return (
+      <div className="w-full px-4 py-8 sm:py-12 lg:py-16 text-center">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-4">Últimos Lanzamientos</h2>
+          <p className="text-sm sm:text-base text-white/80 px-2">Descubre los juegos más recientes</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <FeaturedProductsCarousel products={productsToShow} />
+}
