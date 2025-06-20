@@ -7,19 +7,34 @@ import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
 import ProductsContainer from "@/components/products-container"
 
-// Componente de carga simple
-function LoadingSection() {
+// Componente de carga estático para evitar re-renders
+function ProductsSection() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
-          <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
-          <div className="bg-gray-600 h-4 rounded mb-2"></div>
-          <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
-          <div className="bg-gray-600 h-6 rounded w-1/2"></div>
+    <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
+          <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
         </div>
-      ))}
-    </div>
+
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
+                  <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
+                  <div className="bg-gray-600 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
+                  <div className="bg-gray-600 h-6 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          }
+        >
+          <ProductsContainer />
+        </Suspense>
+      </div>
+    </section>
   )
 }
 
@@ -43,28 +58,28 @@ export default function HomePage() {
                 icon: <Gamepad2 className="w-8 h-8" />,
                 color: "from-cyber-blue to-neon-green",
                 count: "500+",
-                href: "/productos?category=1",
+                href: "/productos",
               },
               {
                 name: "Membresías",
                 icon: <Crown className="w-8 h-8" />,
                 color: "from-electric-purple to-cyber-blue",
                 count: "25+",
-                href: "/productos?category=2",
+                href: "/productos",
               },
               {
                 name: "DLCs",
                 icon: <Gift className="w-8 h-8" />,
                 color: "from-neon-green to-electric-purple",
                 count: "200+",
-                href: "/productos?category=3",
+                href: "/productos",
               },
               {
                 name: "Indie Games",
                 icon: <Star className="w-8 h-8" />,
                 color: "from-gaming-orange to-plasma-pink",
                 count: "150+",
-                href: "/productos?category=4",
+                href: "/productos",
               },
               {
                 name: "PC Gaming",
@@ -121,18 +136,7 @@ export default function HomePage() {
       </section>
 
       {/* Productos Destacados */}
-      <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
-            <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
-          </div>
-
-          <Suspense fallback={<LoadingSection />}>
-            <ProductsContainer />
-          </Suspense>
-        </div>
-      </section>
+      <ProductsSection />
 
       {/* Plataformas Populares */}
       <section className="py-16 bg-midnight-blue">
@@ -144,14 +148,14 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             {[
-              { name: "Steam", logo: "🎮", bg: "bg-cyber-blue", href: "/productos" },
-              { name: "Epic Games", logo: "🚀", bg: "bg-neon-green", href: "/productos" },
-              { name: "PlayStation", logo: "🎯", bg: "bg-electric-purple", href: "/productos" },
-              { name: "Xbox", logo: "🎪", bg: "bg-gaming-orange", href: "/productos" },
-              { name: "Nintendo", logo: "🎨", bg: "bg-plasma-pink", href: "/productos" },
-              { name: "Mobile", logo: "📱", bg: "bg-volt-yellow", href: "/productos" },
+              { name: "Steam", logo: "🎮", bg: "bg-cyber-blue" },
+              { name: "Epic Games", logo: "🚀", bg: "bg-neon-green" },
+              { name: "PlayStation", logo: "🎯", bg: "bg-electric-purple" },
+              { name: "Xbox", logo: "🎪", bg: "bg-gaming-orange" },
+              { name: "Nintendo", logo: "🎨", bg: "bg-plasma-pink" },
+              { name: "Mobile", logo: "📱", bg: "bg-volt-yellow" },
             ].map((platform, index) => (
-              <Link key={index} href={platform.href} className="group">
+              <Link key={index} href="/productos" className="group">
                 <Card className="hover:shadow-lg hover:shadow-cyber-blue/20 transition-all duration-300 group-hover:scale-105 bg-dark-slate/50 border-cyber-blue/20 backdrop-blur-sm">
                   <CardContent className="p-6 text-center">
                     <div

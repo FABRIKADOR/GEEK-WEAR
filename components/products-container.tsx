@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { getProducts } from "@/lib/database"
 import ProductCard from "@/components/product-card"
 import { Button } from "@/components/ui/button"
@@ -11,26 +11,48 @@ export default function ProductsContainer() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false) // Evitar cargas múltiples
+  const mountedRef = useRef(true)
 
   useEffect(() => {
+    // Cleanup function para evitar memory leaks
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    // Solo cargar una vez
+    if (hasLoadedRef.current) return
+
     async function loadProducts() {
       try {
+        hasLoadedRef.current = true
         setLoading(true)
         setError(null)
 
-        console.log("🔍 ProductsContainer: Iniciando carga de productos...")
+        console.log("🔍 ProductsContainer: Iniciando carga única de productos...")
 
-        // Intentar cargar productos destacados primero
-        const { data: featuredProducts, error: featuredError } = await getProducts(8, 1, undefined, undefined, true)
+        // Intentar cargar productos destacados primero con timeout
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 10000))
 
-        console.log("📊 Productos destacados:", { data: featuredProducts, error: featuredError })
+        const productsPromise = getProducts(8, 1, undefined, undefined, true)
 
-        if (featuredError) {
-          console.warn("⚠️ Error cargando productos destacados:", featuredError)
-          // Si falla, intentar cargar productos recientes
+        const { data: featuredProducts, error: featuredError } = (await Promise.race([
+          productsPromise,
+          timeoutPromise,
+        ])) as any
+
+        if (!mountedRef.current) return // Componente desmontado
+
+        console.log("📊 Productos destacados:", { count: featuredProducts?.length || 0, error: featuredError })
+
+        if (featuredError || !featuredProducts || featuredProducts.length === 0) {
+          console.log("📝 Cargando productos recientes como fallback...")
+          // Fallback a productos recientes
           const { data: recentProducts, error: recentError } = await getProducts(8, 1)
 
-          console.log("📊 Productos recientes:", { data: recentProducts, error: recentError })
+          if (!mountedRef.current) return
 
           if (recentError) {
             throw new Error("No se pudieron cargar los productos")
@@ -38,31 +60,24 @@ export default function ProductsContainer() {
 
           setProducts(recentProducts || [])
         } else {
-          // Si hay productos destacados, usarlos
-          if (featuredProducts && featuredProducts.length > 0) {
-            console.log("✅ Usando productos destacados:", featuredProducts.length)
-            setProducts(featuredProducts)
-          } else {
-            console.log("📝 No hay productos destacados, cargando recientes...")
-            // Si no hay productos destacados, cargar productos recientes
-            const { data: recentProducts } = await getProducts(8, 1)
-            console.log("📊 Productos recientes obtenidos:", recentProducts?.length || 0)
-            setProducts(recentProducts || [])
-          }
+          setProducts(featuredProducts)
         }
+
+        console.log("✅ Productos cargados exitosamente")
       } catch (err) {
+        if (!mountedRef.current) return
+
         console.error("❌ Error en loadProducts:", err)
         setError("Error al cargar productos")
       } finally {
-        setLoading(false)
-        console.log("🏁 ProductsContainer: Carga finalizada")
+        if (mountedRef.current) {
+          setLoading(false)
+        }
       }
     }
 
     loadProducts()
-  }, [])
-
-  console.log("🎯 ProductsContainer render:", { loading, error, productsCount: products.length })
+  }, []) // Sin dependencias para evitar re-ejecuciones
 
   if (loading) {
     return (
@@ -85,7 +100,13 @@ export default function ProductsContainer() {
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 max-w-md mx-auto">
           <h3 className="text-xl font-bold text-red-400 mb-2">Error de Conexión</h3>
           <p className="text-red-300 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600 text-white">
+          <Button
+            onClick={() => {
+              hasLoadedRef.current = false
+              window.location.reload()
+            }}
+            className="bg-red-500 hover:bg-red-600 text-white"
+          >
             Reintentar
           </Button>
         </div>
