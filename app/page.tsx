@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { getProducts, getVisibleCategories } from "@/lib/database"
+import { getProducts } from "@/lib/database"
 import HeroSection from "@/components/hero-section"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,20 +8,73 @@ import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
 import FeaturedProducts from "@/components/featured-products"
 import ProductCard from "@/components/product-card"
-import ProductsFallback from "@/components/products-fallback"
+
+// Componente para manejar la carga de productos de forma segura
+async function ProductsSection() {
+  try {
+    // Obtener productos destacados primero
+    const { data: featuredProducts } = await getProducts(6, 1, undefined, undefined, true)
+    console.log("Featured products loaded:", featuredProducts.length)
+
+    // Si no hay productos destacados, obtener productos recientes
+    let productsToShow = featuredProducts
+    if (featuredProducts.length === 0) {
+      const { data: recentProducts } = await getProducts(6, 1)
+      productsToShow = recentProducts
+      console.log("Recent products loaded:", recentProducts.length)
+    }
+
+    if (productsToShow.length > 0) {
+      return <FeaturedProducts products={productsToShow} />
+    }
+  } catch (error) {
+    console.error("Error loading products:", error)
+  }
+
+  // Fallback si no hay productos o hay error
+  return (
+    <div className="w-full px-4 py-8 sm:py-12 lg:py-16 text-center">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-4">Productos Destacados</h2>
+        <p className="text-sm sm:text-base text-white/80 px-2">No hay productos disponibles en este momento</p>
+        <Link href="/admin/productos/nuevo" className="inline-block mt-4">
+          <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Agregar Productos</Button>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// Componente para productos recientes
+async function RecentProductsSection() {
+  try {
+    const { data: recentProducts } = await getProducts(8, 1)
+    console.log("Recent products for section:", recentProducts.length)
+
+    if (recentProducts.length > 0) {
+      return (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {recentProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )
+    }
+  } catch (error) {
+    console.error("Error loading recent products:", error)
+  }
+
+  return (
+    <div className="text-center py-8 text-gray-300">
+      <p>No hay productos disponibles</p>
+      <Link href="/admin/productos/nuevo" className="inline-block mt-4">
+        <Button className="bg-cyber-blue hover:bg-neon-green text-dark-slate font-bold">Agregar Productos</Button>
+      </Link>
+    </div>
+  )
+}
 
 export default async function HomePage() {
-  // Obtener productos para destacados - sin filtro restrictivo
-  const { data: featuredProducts } = await getProducts(12, 1) // Sin filtro de featured
-  console.log("Featured products from database:", featuredProducts.length)
-
-  // Obtener productos recientes - remover filtros restrictivos
-  const { data: recentProducts } = await getProducts(8, 1) // Sin filtros adicionales
-
-  // Obtener solo categorías visibles
-  const categories = await getVisibleCategories()
-  console.log("Visible categories:", categories.length)
-
   return (
     <main className="bg-dark-slate">
       <HeroSection />
@@ -121,7 +174,20 @@ export default async function HomePage() {
       {/* Productos Destacados */}
       <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
         <div className="container mx-auto px-4">
-          <FeaturedProducts products={featuredProducts} />
+          <Suspense
+            fallback={
+              <div className="w-full px-4 py-8 sm:py-12 lg:py-16 text-center">
+                <div className="max-w-4xl mx-auto">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2 sm:mb-4">
+                    Cargando Productos...
+                  </h2>
+                  <p className="text-sm sm:text-base text-white/80 px-2">Obteniendo los mejores juegos</p>
+                </div>
+              </div>
+            }
+          >
+            <ProductsSection />
+          </Suspense>
         </div>
       </section>
 
@@ -228,15 +294,7 @@ export default async function HomePage() {
           </div>
 
           <Suspense fallback={<div className="text-center py-12 text-gray-300">Cargando juegos...</div>}>
-            {recentProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {recentProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <ProductsFallback />
-            )}
+            <RecentProductsSection />
           </Suspense>
         </div>
       </section>

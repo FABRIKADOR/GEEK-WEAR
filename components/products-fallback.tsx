@@ -32,6 +32,35 @@ const mockProducts = [
     categories: { name: "Juegos" },
     featured: true,
   },
+  {
+    id: "4",
+    name: "The Witcher 3",
+    slug: "the-witcher-3",
+    price: 29.99,
+    compare_at_price: 39.99,
+    image_url: "/placeholder.svg?height=300&width=200&text=The+Witcher+3",
+    categories: { name: "Juegos" },
+    featured: true,
+  },
+  {
+    id: "5",
+    name: "Red Dead Redemption 2",
+    slug: "red-dead-redemption-2",
+    price: 44.99,
+    compare_at_price: 59.99,
+    image_url: "/placeholder.svg?height=300&width=200&text=Red+Dead+2",
+    categories: { name: "Juegos" },
+    featured: true,
+  },
+  {
+    id: "6",
+    name: "Horizon Zero Dawn",
+    slug: "horizon-zero-dawn",
+    price: 34.99,
+    image_url: "/placeholder.svg?height=300&width=200&text=Horizon+Zero+Dawn",
+    categories: { name: "Juegos" },
+    featured: true,
+  },
 ]
 
 export default function ProductsFallback() {
