@@ -5,7 +5,38 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Star, Shield, Headphones, Zap, Heart, Gamepad2, Monitor, Smartphone, Trophy, Crown, Gift } from "lucide-react"
-import FeaturedProductsServer from "@/components/featured-products-server"
+import ProductsContainer from "@/components/products-container"
+
+// Componente de carga estático para evitar re-renders
+function ProductsSection() {
+  return (
+    <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
+          <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
+                  <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
+                  <div className="bg-gray-600 h-4 rounded mb-2"></div>
+                  <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
+                  <div className="bg-gray-600 h-6 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          }
+        >
+          <ProductsContainer />
+        </Suspense>
+      </div>
+    </section>
+  )
+}
 
 export default function HomePage() {
   return (
@@ -105,31 +136,7 @@ export default function HomePage() {
       </section>
 
       {/* Productos Destacados */}
-      <section className="py-16 bg-gradient-to-r from-electric-purple via-cyber-blue to-neon-green">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">Productos Destacados</h2>
-            <p className="text-xl text-white/80">Los mejores juegos seleccionados para ti</p>
-          </div>
-
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-midnight-blue/50 rounded-lg p-6 animate-pulse">
-                    <div className="bg-gray-600 h-48 rounded-lg mb-4"></div>
-                    <div className="bg-gray-600 h-4 rounded mb-2"></div>
-                    <div className="bg-gray-600 h-4 rounded w-2/3 mb-2"></div>
-                    <div className="bg-gray-600 h-6 rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            }
-          >
-            <FeaturedProductsServer />
-          </Suspense>
-        </div>
-      </section>
+      <ProductsSection />
 
       {/* Plataformas Populares */}
       <section className="py-16 bg-midnight-blue">
