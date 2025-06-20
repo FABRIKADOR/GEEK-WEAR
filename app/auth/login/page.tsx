@@ -101,11 +101,11 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(0,212,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,212,255,0.03)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse"></div>
 
       {/* Floating Particles */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-gradient-to-r from-cyber-blue to-neon-green rounded-full"
+            className="absolute w-2 h-2 bg-gradient-to-r from-cyber-blue to-neon-green rounded-full pointer-events-none"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -125,7 +125,7 @@ export default function LoginPage() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative z-20 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <motion.div
           className="max-w-md w-full"
           initial={{ opacity: 0, y: 50, rotateX: 15 }}
@@ -295,7 +295,7 @@ export default function LoginPage() {
 
             {/* Footer */}
             <motion.div
-              className="mt-8 text-center"
+              className="mt-8 text-center relative z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 1.2 }}
@@ -304,7 +304,8 @@ export default function LoginPage() {
                 ¿No tienes una cuenta?{" "}
                 <Link
                   href="/auth/register"
-                  className="text-transparent bg-gradient-to-r from-cyber-blue to-neon-green bg-clip-text hover:from-neon-green hover:to-electric-purple font-semibold transition-all duration-300"
+                  className="text-transparent bg-gradient-to-r from-cyber-blue to-neon-green bg-clip-text hover:from-neon-green hover:to-electric-purple font-semibold transition-all duration-300 relative z-50 cursor-pointer"
+                  style={{ pointerEvents: "auto" }}
                 >
                   Únete al GameVault
                 </Link>
