@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { tabSync } from "./tab-sync"
 import type { CartItem, Cart, Product, ProductVariant } from "../types"
 
 type CartStore = {
@@ -54,14 +55,17 @@ export const useCartStore = create<CartStore>()(
         const subtotal = calculateSubtotal(newItems)
         const discount = currentCart.discount
 
-        set({
-          cart: {
-            items: newItems,
-            subtotal,
-            discount,
-            total: subtotal - discount,
-          },
-        })
+        const newCart = {
+          items: newItems,
+          subtotal,
+          discount,
+          total: subtotal - discount,
+        }
+
+        set({ cart: newCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(newCart)
       },
 
       updateItemQuantity: (itemId, quantity) => {
@@ -82,14 +86,17 @@ export const useCartStore = create<CartStore>()(
         const subtotal = calculateSubtotal(newItems)
         const discount = currentCart.discount
 
-        set({
-          cart: {
-            items: newItems,
-            subtotal,
-            discount,
-            total: subtotal - discount,
-          },
-        })
+        const newCart = {
+          items: newItems,
+          subtotal,
+          discount,
+          total: subtotal - discount,
+        }
+
+        set({ cart: newCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(newCart)
       },
 
       removeItem: (itemId) => {
@@ -99,46 +106,79 @@ export const useCartStore = create<CartStore>()(
         const subtotal = calculateSubtotal(newItems)
         const discount = currentCart.discount
 
-        set({
-          cart: {
-            items: newItems,
-            subtotal,
-            discount,
-            total: subtotal - discount,
-          },
-        })
+        const newCart = {
+          items: newItems,
+          subtotal,
+          discount,
+          total: subtotal - discount,
+        }
+
+        set({ cart: newCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(newCart)
       },
 
       clearCart: () => {
         set({ cart: initialCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(initialCart)
       },
 
       applyCoupon: (discount) => {
         const currentCart = get().cart
 
-        set({
-          cart: {
-            ...currentCart,
-            discount,
-            total: currentCart.subtotal - discount,
-          },
-        })
+        const newCart = {
+          ...currentCart,
+          discount,
+          total: currentCart.subtotal - discount,
+        }
+
+        set({ cart: newCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(newCart)
       },
 
       removeCoupon: () => {
         const currentCart = get().cart
 
-        set({
-          cart: {
-            ...currentCart,
-            discount: 0,
-            total: currentCart.subtotal,
-          },
-        })
+        const newCart = {
+          ...currentCart,
+          discount: 0,
+          total: currentCart.subtotal,
+        }
+
+        set({ cart: newCart })
+
+        // Sincronizar con otras pestañas
+        tabSync.syncCart(newCart)
       },
     }),
     {
       name: "geekwear-cart",
+      onRehydrateStorage: () => (state) => {
+        // Detectar conflictos de almacenamiento
+        if (state && typeof window !== "undefined") {
+          const stored = localStorage.getItem("geekwear-cart")
+          if (stored) {
+            try {
+              const parsedStored = JSON.parse(stored)
+              if (JSON.stringify(state.cart) !== JSON.stringify(parsedStored.state.cart)) {
+                console.warn("🔄 Conflicto de carrito detectado entre pestañas")
+                tabSync.reportStorageConflict({
+                  type: "cart",
+                  current: state.cart,
+                  stored: parsedStored.state.cart,
+                })
+              }
+            } catch (error) {
+              console.error("Error comparando carritos:", error)
+            }
+          }
+        }
+      },
     },
   ),
 )

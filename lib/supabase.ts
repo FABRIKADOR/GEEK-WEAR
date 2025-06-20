@@ -1,17 +1,8 @@
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "./supabase-client"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// Añadir logs para verificar que las variables de entorno están definidas
-console.log("Supabase URL defined:", !!supabaseUrl)
-console.log("Supabase Anon Key defined:", !!supabaseAnonKey)
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Supabase environment variables are not properly defined!")
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Eliminar los logs de consola que pueden estar causando problemas
+// console.log("Supabase URL defined:", !!supabaseUrl)
+// console.log("Supabase Anon Key defined:", !!supabaseAnonKey)
 
 export default supabase
 

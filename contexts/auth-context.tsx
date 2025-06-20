@@ -3,9 +3,10 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import supabase from "@/lib/supabase"
+import { supabase } from "@/lib/supabase-client"
 import { signToken, verifyToken } from "@/lib/jwt"
 import { secureStorage } from "@/lib/secure-storage"
+import { tabSync } from "@/lib/tab-sync"
 import type { User } from "@/types"
 
 interface AuthContextType {
@@ -52,18 +53,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getToken = async (): Promise<string | null> => {
     try {
-      console.log("Obteniendo token...")
+      console.log(`[${tabSync.getTabId()}] Obteniendo token...`)
 
       const currentToken = getTokenFromCookie()
       if (currentToken && currentToken !== "undefined" && currentToken !== "null") {
-        console.log("Token encontrado en cookie, verificando...")
+        console.log(`[${tabSync.getTabId()}] Token encontrado en cookie, verificando...`)
         // Verificar si el token es válido
         const payload = await verifyToken(currentToken)
         if (payload) {
-          console.log("Token válido")
+          console.log(`[${tabSync.getTabId()}] Token válido`)
           return currentToken
         } else {
-          console.log("Token inválido, limpiando cookie")
+          console.log(`[${tabSync.getTabId()}] Token inválido, limpiando cookie`)
           clearTokenCookie()
         }
       }
@@ -71,24 +72,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Si no hay token válido y hay usuario, crear uno nuevo
       if (user) {
         try {
-          console.log("Creando nuevo token para usuario:", user.email)
+          console.log(`[${tabSync.getTabId()}] Creando nuevo token para usuario:`, user.email)
           // Asegurarse de que el usuario no tenga propiedades undefined
           const cleanUser = JSON.parse(JSON.stringify(user))
           const newToken = await signToken(cleanUser)
           setTokenCookie(newToken)
           setToken(newToken)
-          console.log("Nuevo token creado exitosamente")
+          console.log(`[${tabSync.getTabId()}] Nuevo token creado exitosamente`)
           return newToken
         } catch (error) {
-          console.error("Error creando nuevo token:", error)
+          console.error(`[${tabSync.getTabId()}] Error creando nuevo token:`, error)
           return null
         }
       }
 
-      console.log("No hay usuario o token disponible")
+      console.log(`[${tabSync.getTabId()}] No hay usuario o token disponible`)
       return null
     } catch (error) {
-      console.error("Error obteniendo token:", error)
+      console.error(`[${tabSync.getTabId()}] Error obteniendo token:`, error)
       return null
     }
   }
@@ -96,7 +97,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        console.log("Verificando sesión...")
+        console.log(`[${tabSync.getTabId()}] Verificando sesión... (Líder: ${tabSync.getIsLeader()})`)
+
+        // Solo la pestaña líder maneja la autenticación inicial
+        if (!tabSync.getIsLeader()) {
+          console.log(`[${tabSync.getTabId()}] No soy líder, esperando sincronización...`)
+          setLoading(false)
+          return
+        }
 
         // Limpiar cualquier token inválido primero
         const cookieToken = getTokenFromCookie()
@@ -106,29 +114,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Verificar token JWT válido
         if (cookieToken && cookieToken !== "undefined" && cookieToken !== "null") {
-          console.log("Verificando token existente...")
+          console.log(`[${tabSync.getTabId()}] Verificando token existente...`)
           const payload = await verifyToken(cookieToken)
           if (payload) {
-            console.log("Token válido, estableciendo usuario:", payload.email)
+            console.log(`[${tabSync.getTabId()}] Token válido, estableciendo usuario:`, payload.email)
             setUser(payload as User)
             setToken(cookieToken)
+            tabSync.syncAuth({ user: payload, token: cookieToken })
             setLoading(false)
             return
           } else {
-            console.log("Token inválido, limpiando")
+            console.log(`[${tabSync.getTabId()}] Token inválido, limpiando`)
             // Token inválido, limpiar
             clearTokenCookie()
           }
         }
 
         // Fallback a Supabase session
-        console.log("Verificando sesión de Supabase...")
+        console.log(`[${tabSync.getTabId()}] Verificando sesión de Supabase...`)
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (session) {
-          console.log("Sesión de Supabase encontrada:", session.user.email)
+          console.log(`[${tabSync.getTabId()}] Sesión de Supabase encontrada:`, session.user.email)
           // Verificar si el usuario es admin (puedes ajustar esta lógica según tu sistema)
           const isAdmin = session.user.email === "hola@mail.com"
 
@@ -144,12 +153,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTokenCookie(jwtToken)
           setToken(jwtToken)
           setUser(userData)
-          console.log("Usuario establecido con nuevo token")
+          tabSync.syncAuth({ user: userData, token: jwtToken })
+          console.log(`[${tabSync.getTabId()}] Usuario establecido con nuevo token`)
         } else {
-          console.log("No hay sesión activa")
+          console.log(`[${tabSync.getTabId()}] No hay sesión activa`)
         }
       } catch (error) {
-        console.error("Error al verificar sesión:", error)
+        console.error(`[${tabSync.getTabId()}] Error al verificar sesión:`, error)
         // En caso de error, limpiar todo
         clearTokenCookie()
         setToken(null)
@@ -162,7 +172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkSession()
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Cambio de estado de auth:", event)
+      console.log(`[${tabSync.getTabId()}] Cambio de estado de auth:`, event)
+
+      // Solo la pestaña líder maneja los cambios de auth
+      if (!tabSync.getIsLeader()) {
+        return
+      }
 
       if (event === "SIGNED_IN" && session) {
         // Verificar si el usuario es admin (puedes ajustar esta lógica según tu sistema)
@@ -180,7 +195,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTokenCookie(jwtToken)
         setToken(jwtToken)
         setUser(userData)
-        console.log("Usuario logueado:", userData.email)
+        tabSync.syncAuth({ user: userData, token: jwtToken })
+        console.log(`[${tabSync.getTabId()}] Usuario logueado:`, userData.email)
 
         // Redirigir después del login con Google
         if (typeof window !== "undefined") {
@@ -189,12 +205,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           router.push(redirect)
         }
       } else if (event === "SIGNED_OUT") {
-        console.log("Usuario deslogueado")
+        console.log(`[${tabSync.getTabId()}] Usuario deslogueado`)
         // Limpiar token y datos seguros
         clearTokenCookie()
         secureStorage.clearSecureData()
         setToken(null)
         setUser(null)
+        tabSync.syncAuth({ user: null, token: null })
       }
     })
 
@@ -206,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignIn = async (email: string, password: string) => {
     try {
       setLoading(true)
-      console.log("Iniciando sesión para:", email)
+      console.log(`[${tabSync.getTabId()}] Iniciando sesión para:`, email)
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -231,10 +248,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTokenCookie(jwtToken)
         setToken(jwtToken)
         setUser(userData)
-        console.log("Sesión iniciada exitosamente")
+        tabSync.syncAuth({ user: userData, token: jwtToken })
+        console.log(`[${tabSync.getTabId()}] Sesión iniciada exitosamente`)
       }
     } catch (error) {
-      console.error("Error en handleSignIn:", error)
+      console.error(`[${tabSync.getTabId()}] Error en handleSignIn:`, error)
       throw error
     } finally {
       setLoading(false)
@@ -244,7 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignInWithGoogle = async () => {
     try {
       setLoading(true)
-      console.log("Iniciando sesión con Google...")
+      console.log(`[${tabSync.getTabId()}] Iniciando sesión con Google...`)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -255,9 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      console.log("Redirección a Google iniciada")
+      console.log(`[${tabSync.getTabId()}] Redirección a Google iniciada`)
     } catch (error) {
-      console.error("Error en handleSignInWithGoogle:", error)
+      console.error(`[${tabSync.getTabId()}] Error en handleSignInWithGoogle:`, error)
       throw error
     } finally {
       setLoading(false)
@@ -277,7 +295,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
     } catch (error) {
-      console.error("Error en handleSignUp:", error)
+      console.error(`[${tabSync.getTabId()}] Error en handleSignUp:`, error)
       throw error
     } finally {
       setLoading(false)
@@ -295,9 +313,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       secureStorage.clearSecureData()
       setToken(null)
       setUser(null)
+      tabSync.syncAuth({ user: null, token: null })
       router.push("/")
     } catch (error) {
-      console.error("Error en handleSignOut:", error)
+      console.error(`[${tabSync.getTabId()}] Error en handleSignOut:`, error)
       throw error
     } finally {
       setLoading(false)
