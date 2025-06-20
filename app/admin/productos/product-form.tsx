@@ -397,24 +397,38 @@ export default function ProductForm({ initialData, initialImages = [] }: Product
               </Card>
 
               <div className="flex justify-end gap-4">
-                <Button type="button" variant="outline" onClick={() => router.push("/admin/productos")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/admin/productos")}
+                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                >
                   Cancelar
                 </Button>
                 {productData ? (
                   <>
-                    <Button type="button" onClick={() => setActiveTab("images")} variant="outline">
+                    <Button
+                      type="button"
+                      onClick={() => setActiveTab("images")}
+                      variant="outline"
+                      className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                    >
                       Gestionar Imágenes
                     </Button>
                     <Button
                       type="submit"
                       disabled={isSubmitting || !formEditable}
-                      className="bg-grape hover:bg-dark-blue"
+                      className="bg-blue-600 hover:bg-blue-700 text-white border-0"
                     >
                       {isSubmitting ? "Actualizando..." : "Actualizar Producto"}
                     </Button>
                   </>
                 ) : (
-                  <Button type="submit" disabled={isSubmitting} className="bg-grape hover:bg-dark-blue">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+                  >
                     {isSubmitting ? "Guardando..." : "Crear Producto"}
                   </Button>
                 )}
@@ -440,13 +454,14 @@ export default function ProductForm({ initialData, initialImages = [] }: Product
                     setActiveTab("general")
                     setFormEditable(true) // Asegurar que el formulario sea editable al volver
                   }}
+                  className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                 >
                   Volver a Información General
                 </Button>
                 <Button
                   type="button"
                   onClick={() => router.push("/admin/productos")}
-                  className="bg-grape hover:bg-dark-blue"
+                  className="bg-blue-600 hover:bg-blue-700 text-white border-0"
                 >
                   Finalizar
                 </Button>
