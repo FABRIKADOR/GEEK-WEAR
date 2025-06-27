@@ -98,92 +98,98 @@ export default function InvitacionXV() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 font-serif relative">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 lg:p-8 font-serif relative">
       <FloatingParticles />
 
-      <div className="w-full max-w-md space-y-8 relative z-10">
+      <div className="w-full max-w-md lg:max-w-4xl space-y-8 lg:space-y-12 relative z-10">
         {/* Header con fecha */}
         <div className="text-center">
-          <div className="inline-block border border-zinc-500 rounded-full px-8 py-3 mb-12 bg-zinc-800">
-            <span className="text-sm font-light tracking-wider text-zinc-300">4 de Julio, 2025</span>
+          <div className="inline-block border border-zinc-500 rounded-full px-8 py-3 lg:px-12 lg:py-4 mb-12 lg:mb-16 bg-zinc-800">
+            <span className="text-sm lg:text-lg font-light tracking-wider text-zinc-300">4 de Julio, 2025</span>
           </div>
 
           {/* Título principal */}
-          <h1 className="text-6xl font-bold mb-3 italic bg-gradient-to-b from-white to-gray-300 bg-clip-text text-transparent">
+          <h1 className="text-6xl lg:text-8xl font-bold mb-3 lg:mb-4 italic bg-gradient-to-b from-white to-gray-300 bg-clip-text text-transparent">
             Mis XV
           </h1>
-          <h1 className="text-6xl font-bold mb-8 italic bg-gradient-to-b from-white to-gray-300 bg-clip-text text-transparent">
+          <h1 className="text-6xl lg:text-8xl font-bold mb-8 lg:mb-12 italic bg-gradient-to-b from-white to-gray-300 bg-clip-text text-transparent">
             Años
           </h1>
 
           {/* Decoración elegante */}
-          <div className="flex justify-center items-center space-x-6 mb-8">
-            <div className="w-1 h-8 bg-gradient-to-b from-transparent via-gray-400 to-transparent"></div>
-            <Sparkles className="w-6 h-6 text-gray-400" />
-            <div className="w-1 h-8 bg-gradient-to-b from-transparent via-gray-400 to-transparent"></div>
+          <div className="flex justify-center items-center space-x-6 lg:space-x-8 mb-8 lg:mb-12">
+            <div className="w-1 h-8 lg:h-12 bg-gradient-to-b from-transparent via-gray-400 to-transparent"></div>
+            <Sparkles className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" />
+            <div className="w-1 h-8 lg:h-12 bg-gradient-to-b from-transparent via-gray-400 to-transparent"></div>
           </div>
 
           {/* Nombre */}
-          <h2 className="text-2xl font-light mb-3 italic text-gray-200 tracking-wide">Camila del Cielo Aguilar</h2>
-          <h2 className="text-2xl font-light mb-12 italic text-gray-200 tracking-wide">Nowell</h2>
+          <h2 className="text-2xl lg:text-4xl font-light mb-3 lg:mb-4 italic text-gray-200 tracking-wide">
+            Camila del Cielo Aguilar
+          </h2>
+          <h2 className="text-2xl lg:text-4xl font-light mb-12 lg:mb-16 italic text-gray-200 tracking-wide">Nowell</h2>
 
           {/* Faltan */}
-          <p className="text-lg mb-8 italic text-gray-300 tracking-wider">Faltan</p>
+          <p className="text-lg lg:text-2xl mb-8 lg:mb-12 italic text-gray-300 tracking-wider">Faltan</p>
         </div>
 
         {/* Contador regresivo */}
-        <div className="grid grid-cols-4 gap-3 mb-12">
+        <div className="grid grid-cols-4 gap-3 lg:gap-6 mb-12 lg:mb-16">
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 shadow-lg">
-              <div className="text-3xl font-bold text-gray-100">{timeLeft.days}</div>
+            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+              <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.days}</div>
             </div>
-            <div className="text-xs mt-3 text-gray-400 italic tracking-wider">Días</div>
+            <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Días</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 shadow-lg">
-              <div className="text-3xl font-bold text-gray-100">{timeLeft.hours}</div>
+            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+              <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.hours}</div>
             </div>
-            <div className="text-xs mt-3 text-gray-400 italic tracking-wider">Horas</div>
+            <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Horas</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 shadow-lg">
-              <div className="text-3xl font-bold text-gray-100">{timeLeft.minutes}</div>
+            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+              <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.minutes}</div>
             </div>
-            <div className="text-xs mt-3 text-gray-400 italic tracking-wider">Minutos</div>
+            <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Minutos</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 shadow-lg">
-              <div className="text-3xl font-bold text-gray-100">{timeLeft.seconds}</div>
+            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+              <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.seconds}</div>
             </div>
-            <div className="text-xs mt-3 text-gray-400 italic tracking-wider">Segundos</div>
+            <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Segundos</div>
           </div>
         </div>
 
         {/* Información del evento */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
           {/* Hora */}
           <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
-            <CardContent className="p-8 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="bg-zinc-600 rounded-full p-3 shadow-lg">
-                  <Clock className="w-6 h-6 text-gray-200" />
+            <CardContent className="p-8 lg:p-10 text-center">
+              <div className="flex justify-center mb-4 lg:mb-6">
+                <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
+                  <Clock className="w-6 h-6 lg:w-8 lg:h-8 text-gray-200" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3 italic text-gray-200 tracking-wide">Hora</h3>
-              <p className="text-3xl font-bold mb-2 text-gray-100">7:00 PM</p>
-              <p className="text-sm text-gray-400 italic">Hora de Cancún</p>
+              <h3 className="text-xl lg:text-2xl font-semibold mb-3 lg:mb-4 italic text-gray-200 tracking-wide">
+                Hora
+              </h3>
+              <p className="text-3xl lg:text-4xl font-bold mb-2 lg:mb-3 text-gray-100">7:00 PM</p>
+              <p className="text-sm lg:text-base text-gray-400 italic">Hora de Cancún</p>
             </CardContent>
           </Card>
 
           {/* Lugar */}
           <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
-            <CardContent className="p-8 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="bg-zinc-600 rounded-full p-3 shadow-lg">
-                  <MapPin className="w-6 h-6 text-gray-200" />
+            <CardContent className="p-8 lg:p-10 text-center">
+              <div className="flex justify-center mb-4 lg:mb-6">
+                <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
+                  <MapPin className="w-6 h-6 lg:w-8 lg:h-8 text-gray-200" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3 italic text-gray-200 tracking-wide">Lugar</h3>
+              <h3 className="text-xl lg:text-2xl font-semibold mb-3 lg:mb-4 italic text-gray-200 tracking-wide">
+                Lugar
+              </h3>
               <p className="text-2xl font-semibold mb-6 text-gray-100 italic">Salón Diamante</p>
               <Button
                 variant="outline"
@@ -198,13 +204,15 @@ export default function InvitacionXV() {
 
           {/* Mesa de regalos */}
           <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
-            <CardContent className="p-8 text-center">
-              <div className="flex justify-center mb-4">
-                <div className="bg-zinc-600 rounded-full p-3 shadow-lg">
-                  <Gift className="w-6 h-6 text-gray-200" />
+            <CardContent className="p-8 lg:p-10 text-center">
+              <div className="flex justify-center mb-4 lg:mb-6">
+                <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
+                  <Gift className="w-6 h-6 lg:w-8 lg:h-8 text-gray-200" />
                 </div>
               </div>
-              <h3 className="text-xl font-semibold mb-3 italic text-gray-200 tracking-wide">Mesa de Regalos</h3>
+              <h3 className="text-xl lg:text-2xl font-semibold mb-3 lg:mb-4 italic text-gray-200 tracking-wide">
+                Mesa de Regalos
+              </h3>
               <p className="text-sm text-gray-300 mb-6 italic">Tu presencia es el mejor regalo</p>
               <Button
                 className="bg-zinc-700 hover:bg-zinc-600 text-white w-full transition-all duration-300 italic tracking-wide shadow-lg"
@@ -218,9 +226,9 @@ export default function InvitacionXV() {
         </div>
 
         {/* Mensaje final */}
-        <div className="text-center mt-12 px-6">
-          <div className="border-t border-zinc-700 pt-8">
-            <p className="text-sm italic text-gray-300 leading-relaxed tracking-wide font-light">
+        <div className="text-center mt-12 lg:mt-16 px-6 lg:px-12">
+          <div className="border-t border-zinc-700 pt-8 lg:pt-12">
+            <p className="text-sm lg:text-lg italic text-gray-300 leading-relaxed tracking-wide font-light max-w-2xl mx-auto">
               "Con la bendición de Dios y el amor de mis padres, te invito a celebrar conmigo este día tan especial."
             </p>
           </div>
