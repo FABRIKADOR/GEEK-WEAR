@@ -98,13 +98,27 @@ export default function InvitacionXV() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 lg:p-8 font-serif relative">
+    <div className="min-h-screen text-white flex flex-col items-center justify-center p-4 lg:p-8 font-serif relative">
+      {/* Imagen de fondo */}
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('/images/camila-xv.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+        }}
+      />
+
+      {/* Overlay oscuro para legibilidad */}
+      <div className="fixed inset-0 bg-black bg-opacity-75" />
+
       <FloatingParticles />
 
       <div className="w-full max-w-md lg:max-w-4xl space-y-8 lg:space-y-12 relative z-10">
         {/* Header con fecha */}
         <div className="text-center">
-          <div className="inline-block border border-zinc-500 rounded-full px-8 py-3 lg:px-12 lg:py-4 mb-12 lg:mb-16 bg-zinc-800">
+          <div className="inline-block border border-zinc-500 rounded-full px-8 py-3 lg:px-12 lg:py-4 mb-12 lg:mb-16 bg-zinc-800 bg-opacity-90">
             <span className="text-sm lg:text-lg font-light tracking-wider text-zinc-300">4 de Julio, 2025</span>
           </div>
 
@@ -136,25 +150,25 @@ export default function InvitacionXV() {
         {/* Contador regresivo */}
         <div className="grid grid-cols-4 gap-3 lg:gap-6 mb-12 lg:mb-16">
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+            <div className="bg-zinc-800 bg-opacity-90 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
               <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.days}</div>
             </div>
             <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Días</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+            <div className="bg-zinc-800 bg-opacity-90 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
               <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.hours}</div>
             </div>
             <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Horas</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+            <div className="bg-zinc-800 bg-opacity-90 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
               <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.minutes}</div>
             </div>
             <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Minutos</div>
           </div>
           <div className="text-center">
-            <div className="bg-zinc-800 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
+            <div className="bg-zinc-800 bg-opacity-90 border border-zinc-600 rounded-lg p-4 lg:p-6 shadow-lg">
               <div className="text-3xl lg:text-5xl font-bold text-gray-100">{timeLeft.seconds}</div>
             </div>
             <div className="text-xs lg:text-sm mt-3 lg:mt-4 text-gray-400 italic tracking-wider">Segundos</div>
@@ -164,7 +178,7 @@ export default function InvitacionXV() {
         {/* Información del evento */}
         <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
           {/* Hora */}
-          <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
+          <Card className="bg-zinc-900 bg-opacity-90 border-zinc-600 shadow-xl">
             <CardContent className="p-8 lg:p-10 text-center">
               <div className="flex justify-center mb-4 lg:mb-6">
                 <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
@@ -180,7 +194,7 @@ export default function InvitacionXV() {
           </Card>
 
           {/* Lugar */}
-          <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
+          <Card className="bg-zinc-900 bg-opacity-90 border-zinc-600 shadow-xl">
             <CardContent className="p-8 lg:p-10 text-center">
               <div className="flex justify-center mb-4 lg:mb-6">
                 <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
@@ -203,7 +217,7 @@ export default function InvitacionXV() {
           </Card>
 
           {/* Mesa de regalos */}
-          <Card className="bg-zinc-900 border-zinc-600 shadow-xl">
+          <Card className="bg-zinc-900 bg-opacity-90 border-zinc-600 shadow-xl">
             <CardContent className="p-8 lg:p-10 text-center">
               <div className="flex justify-center mb-4 lg:mb-6">
                 <div className="bg-zinc-600 rounded-full p-3 lg:p-4 shadow-lg">
@@ -228,6 +242,10 @@ export default function InvitacionXV() {
         {/* Mensaje final */}
         <div className="text-center mt-12 lg:mt-16 px-6 lg:px-12">
           <div className="border-t border-zinc-700 pt-8 lg:pt-12">
+            <p className="text-sm lg:text-lg italic text-gray-300 leading-relaxed tracking-wide font-light max-w-2xl mx-auto mb-6">
+              "Eres un invitado especial para mí y agradezco puedas llegar a tiempo para no perderte ningún detalle de
+              esta fiesta y así poder compartir estos momentos especiales en mi vida."
+            </p>
             <p className="text-sm lg:text-lg italic text-gray-300 leading-relaxed tracking-wide font-light max-w-2xl mx-auto">
               "Con la bendición de Dios y el amor de mis padres, te invito a celebrar conmigo este día tan especial."
             </p>
