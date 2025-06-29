@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Clock, MapPin, Gift, Sparkles, Star, Heart } from "lucide-react"
+import { Clock, MapPin, Gift, Sparkles, Star, Heart, MessageCircle } from "lucide-react"
 
 // Componente de partículas flotantes
 function FloatingParticles() {
@@ -95,6 +95,13 @@ export default function InvitacionXV() {
 
   const handleAmazonClick = () => {
     window.open("https://www.amazon.com.mx/registries/gl/guest-view/13F1XA158XEFZ", "_blank")
+  }
+
+  const handleWhatsAppConfirm = () => {
+    const message = encodeURIComponent(
+      "Hola, confirmo mi asistencia a los XV años de Camila del Cielo Aguilar Nowell el 4 de julio de 2025 a las 7:00 PM en Salón Diamante. ¡Nos vemos ahí! 🎉",
+    )
+    window.open(`https://wa.me/5219983061480?text=${message}`, "_blank")
   }
 
   return (
@@ -237,6 +244,17 @@ export default function InvitacionXV() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Botón de confirmación por WhatsApp */}
+        <div className="text-center mt-8 lg:mt-12">
+          <Button
+            onClick={handleWhatsAppConfirm}
+            className="bg-zinc-700 hover:bg-zinc-600 text-white px-8 py-4 lg:px-12 lg:py-6 text-lg lg:text-xl font-semibold italic tracking-wide shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <MessageCircle className="w-5 h-5 lg:w-6 lg:h-6 mr-3" />
+            Confirmar Asistencia
+          </Button>
         </div>
 
         {/* Mensaje final */}
