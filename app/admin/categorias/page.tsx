@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import { AdminCheck } from "@/components/admin-check"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,10 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Edit, Trash2, Tag, Eye, EyeOff } from "lucide-react"
+import { Plus, Edit, Trash2, Tag } from "lucide-react"
 import { categoryService, type Category } from "@/services/category-service"
 import { toast } from "sonner"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
@@ -26,7 +26,6 @@ export default function AdminCategoriesPage() {
     name: "",
     description: "",
     image_url: "",
-    is_visible: true,
   })
 
   useEffect(() => {
@@ -65,7 +64,7 @@ export default function AdminCategoriesPage() {
         toast.success("Categoría creada exitosamente")
       }
 
-      setFormData({ name: "", description: "", image_url: "", is_visible: true })
+      setFormData({ name: "", description: "", image_url: "" })
       setEditingCategory(null)
       setIsCreateOpen(false)
       loadCategories()
@@ -81,7 +80,6 @@ export default function AdminCategoriesPage() {
       name: category.name,
       description: category.description || "",
       image_url: category.image_url || "",
-      is_visible: category.is_visible ?? true,
     })
     setIsCreateOpen(true)
   }
@@ -101,26 +99,8 @@ export default function AdminCategoriesPage() {
     }
   }
 
-  const handleToggleVisibility = async (category: Category) => {
-    try {
-      const newVisibility = !category.is_visible
-      await categoryService.updateCategory(category.id!, {
-        name: category.name,
-        description: category.description || "",
-        image_url: category.image_url || "",
-        is_visible: newVisibility,
-      })
-
-      toast.success(`Categoría ${newVisibility ? "mostrada" : "ocultada"} exitosamente`)
-      loadCategories()
-    } catch (error) {
-      console.error("Error toggling visibility:", error)
-      toast.error("Error al cambiar la visibilidad")
-    }
-  }
-
   const resetForm = () => {
-    setFormData({ name: "", description: "", image_url: "", is_visible: true })
+    setFormData({ name: "", description: "", image_url: "" })
     setEditingCategory(null)
   }
 
@@ -129,14 +109,20 @@ export default function AdminCategoriesPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Gestionar Categorías</h1>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <Dialog
+            open={isCreateOpen}
+            onOpenChange={(open) => {
+              setIsCreateOpen(open)
+              if (!open) resetForm()
+            }}
+          >
             <DialogTrigger asChild>
-              <Button onClick={() => setIsCreateOpen(true)}>
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Nueva Categoría
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingCategory ? "Editar Categoría" : "Crear Nueva Categoría"}</DialogTitle>
               </DialogHeader>
@@ -171,23 +157,8 @@ export default function AdminCategoriesPage() {
                     type="url"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_visible"
-                    checked={formData.is_visible}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_visible: checked })}
-                  />
-                  <Label htmlFor="is_visible">Visible en el sitio web</Label>
-                </div>
                 <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateOpen(false)
-                      resetForm()
-                    }}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancelar
                   </Button>
                   <Button type="submit">{editingCategory ? "Actualizar" : "Crear"}</Button>
@@ -222,7 +193,6 @@ export default function AdminCategoriesPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead>Visibilidad</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -237,31 +207,7 @@ export default function AdminCategoriesPage() {
                       </TableCell>
                       <TableCell className="max-w-xs truncate">{category.description || "-"}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={category.is_visible ?? true}
-                            onCheckedChange={() => handleToggleVisibility(category)}
-                            size="sm"
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {(category.is_visible ?? true) ? (
-                              <div className="flex items-center text-green-600">
-                                <Eye className="h-4 w-4 mr-1" />
-                                Visible
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-gray-500">
-                                <EyeOff className="h-4 w-4 mr-1" />
-                                Oculta
-                              </div>
-                            )}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={(category.is_visible ?? true) ? "default" : "secondary"}>
-                          {(category.is_visible ?? true) ? "Activa" : "Inactiva"}
-                        </Badge>
+                        <Badge variant="default">Activa</Badge>
                       </TableCell>
                       <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">

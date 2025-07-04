@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import { AdminCheck } from "@/components/admin-check"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,10 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Edit, Trash2, Tag, Eye, EyeOff } from "lucide-react"
+import { Plus, Edit, Trash2, Tag } from "lucide-react"
 import { categoryService, type Category } from "@/services/category-service"
 import { toast } from "sonner"
 
@@ -25,7 +25,6 @@ export default function AdminCategoriesPage() {
     name: "",
     description: "",
     image_url: "",
-    is_visible: true,
   })
 
   useEffect(() => {
@@ -36,10 +35,9 @@ export default function AdminCategoriesPage() {
     try {
       setLoading(true)
       const data = await categoryService.getCategories()
-      console.log("✅ Categorías cargadas:", data)
       setCategories(data)
     } catch (error) {
-      console.error("❌ Error loading categories:", error)
+      console.error("Error loading categories:", error)
       toast.error("Error al cargar las categorías")
     } finally {
       setLoading(false)
@@ -48,7 +46,6 @@ export default function AdminCategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("📝 Enviando formulario:", formData)
 
     if (!formData.name.trim()) {
       toast.error("El nombre es requerido")
@@ -64,38 +61,24 @@ export default function AdminCategoriesPage() {
         toast.success("Categoría creada exitosamente")
       }
 
-      setFormData({ name: "", description: "", image_url: "", is_visible: true })
+      setFormData({ name: "", description: "", image_url: "" })
       setEditingCategory(null)
       setIsCreateOpen(false)
       loadCategories()
     } catch (error) {
-      console.error("❌ Error saving category:", error)
+      console.error("Error saving category:", error)
       toast.error("Error al guardar la categoría")
     }
   }
 
   const handleEdit = (category: Category) => {
-    console.log("✏️ Editando categoría:", category)
     setEditingCategory(category)
     setFormData({
       name: category.name,
       description: category.description || "",
       image_url: category.image_url || "",
-      is_visible: category.is_visible ?? true,
     })
     setIsCreateOpen(true)
-  }
-
-  const handleToggleVisibility = async (id: string, currentVisibility: boolean) => {
-    console.log("👁️ Cambiando visibilidad:", { id, currentVisibility })
-    try {
-      await categoryService.toggleCategoryVisibility(id, !currentVisibility)
-      toast.success(`Categoría ${!currentVisibility ? "mostrada" : "ocultada"} exitosamente`)
-      loadCategories()
-    } catch (error) {
-      console.error("❌ Error toggling visibility:", error)
-      toast.error("Error al cambiar la visibilidad")
-    }
   }
 
   const handleDelete = async (id: string) => {
@@ -108,13 +91,13 @@ export default function AdminCategoriesPage() {
       toast.success("Categoría eliminada exitosamente")
       loadCategories()
     } catch (error) {
-      console.error("❌ Error deleting category:", error)
+      console.error("Error deleting category:", error)
       toast.error("Error al eliminar la categoría")
     }
   }
 
   const resetForm = () => {
-    setFormData({ name: "", description: "", image_url: "", is_visible: true })
+    setFormData({ name: "", description: "", image_url: "" })
     setEditingCategory(null)
   }
 
@@ -138,13 +121,12 @@ export default function AdminCategoriesPage() {
           <Dialog
             open={isCreateOpen}
             onOpenChange={(open) => {
-              console.log("🔄 Dialog state changed:", open)
               setIsCreateOpen(open)
               if (!open) resetForm()
             }}
           >
             <DialogTrigger asChild>
-              <Button onClick={() => console.log("➕ Botón Nueva Categoría clickeado")}>
+              <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Nueva Categoría
               </Button>
@@ -184,14 +166,6 @@ export default function AdminCategoriesPage() {
                     type="url"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_visible"
-                    checked={formData.is_visible}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_visible: checked })}
-                  />
-                  <Label htmlFor="is_visible">Visible en el sitio web</Label>
-                </div>
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancelar
@@ -224,7 +198,6 @@ export default function AdminCategoriesPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead>Visibilidad</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -239,37 +212,11 @@ export default function AdminCategoriesPage() {
                       </TableCell>
                       <TableCell className="max-w-xs truncate">{category.description || "-"}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={category.is_visible ?? true}
-                            onCheckedChange={() => handleToggleVisibility(category.id!, category.is_visible ?? true)}
-                            size="sm"
-                          />
-                          <span className="text-sm text-muted-foreground">
-                            {(category.is_visible ?? true) ? "Visible" : "Oculta"}
-                          </span>
-                        </div>
+                        <Badge variant="default">Activa</Badge>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={(category.is_visible ?? true) ? "default" : "secondary"}>
-                          {(category.is_visible ?? true) ? "Activa" : "Oculta"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(category.created_at!).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleToggleVisibility(category.id!, category.is_visible ?? true)}
-                            title={(category.is_visible ?? true) ? "Ocultar categoría" : "Mostrar categoría"}
-                          >
-                            {(category.is_visible ?? true) ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(category)}>
                             <Edit className="h-4 w-4" />
                           </Button>

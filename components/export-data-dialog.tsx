@@ -15,14 +15,12 @@ export default function ExportDataDialog() {
   const { toast } = useToast()
 
   const handleExport = async () => {
-    let productCount = 0
     console.log("🚀 Iniciando exportación...", { format: exportFormat })
     setIsExporting(true)
 
     try {
       console.log("📤 Llamando a API...")
 
-      // Hacer la exportación directamente
       const response = await fetch("/api/export", {
         method: "POST",
         headers: {
@@ -35,44 +33,16 @@ export default function ExportDataDialog() {
       })
 
       console.log("📥 Respuesta:", response.status, response.statusText)
-      console.log("📥 Headers:", Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorText = await response.text()
         console.error("❌ Error response:", errorText)
-
-        // Intentar parsear como JSON para obtener más detalles
-        try {
-          const errorJson = JSON.parse(errorText)
-          throw new Error(`Error ${response.status}: ${errorJson.message || errorText}`)
-        } catch {
-          throw new Error(`Error ${response.status}: ${errorText}`)
-        }
-      }
-
-      // Verificar que la respuesta sea un blob
-      const contentType = response.headers.get("content-type")
-      console.log("📄 Content-Type:", contentType)
-
-      if (!contentType?.includes("application/vnd.openxmlformats") && !contentType?.includes("text/csv")) {
-        const text = await response.text()
-        console.error("❌ Respuesta inesperada:", text)
-        throw new Error("Respuesta no es un archivo válido")
+        throw new Error(`Error ${response.status}: ${errorText}`)
       }
 
       // Descargar archivo
       const blob = await response.blob()
-      console.log("📦 Blob:", blob.size, "bytes", blob.type)
-
-      // Intentar obtener el número de productos del header si está disponible
-      const productCountHeader = response.headers.get("x-product-count")
-      if (productCountHeader) {
-        productCount = Number.parseInt(productCountHeader)
-      }
-
-      if (blob.size === 0) {
-        throw new Error("El archivo generado está vacío")
-      }
+      console.log("📦 Blob:", blob.size, "bytes")
 
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement("a")
@@ -86,15 +56,11 @@ export default function ExportDataDialog() {
       console.log("✅ Descarga completada")
 
       toast({
-        title: "¡Exportación completada!",
-        description: `${productCount || 30} productos exportados exitosamente en formato ${exportFormat.toUpperCase()}`,
-        duration: 5000,
+        title: "¡Éxito!",
+        description: `Productos exportados en formato ${exportFormat.toUpperCase()}`,
       })
 
-      // Cerrar el diálogo después de un breve delay
-      // setTimeout(() => {
-      //   setIsOpen(false)
-      // }, 1500)
+      setIsOpen(false)
     } catch (error: any) {
       console.error("❌ Error:", error)
       toast({

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Facebook, Instagram, Twitter, Gamepad2, Youtube, Twitch } from "lucide-react"
+import { Facebook, Instagram, Twitter } from "lucide-react"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase-client"
 
@@ -24,44 +24,33 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className="bg-gradient-to-r from-deep-space to-dark-slate text-white border-t border-cyber-blue/20">
+    <footer className="bg-gradient-to-r from-grape to-dark-blue text-white">
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Gamepad2 className="h-8 w-8 text-cyber-blue" />
-              <h3 className="text-xl font-bold text-cyber-blue">GameVault</h3>
-            </div>
-            <p className="text-gray-300 mb-4">
-              Tu arsenal gaming definitivo. Juegos, membresías y contenido premium al mejor precio.
-            </p>
+            <h3 className="text-xl font-bold mb-4">GeekWear</h3>
+            <p className="text-gray-200 mb-4">Tu tienda de ropa y accesorios para verdaderos fanáticos.</p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-300 hover:text-cyber-blue transition-colors">
-                <Facebook className="w-5 h-5" />
+              <a href="#" className="text-white hover:text-vivid-sky-blue transition-colors">
+                <Facebook />
               </a>
-              <a href="#" className="text-gray-300 hover:text-neon-green transition-colors">
-                <Instagram className="w-5 h-5" />
+              <a href="#" className="text-white hover:text-vivid-sky-blue transition-colors">
+                <Instagram />
               </a>
-              <a href="#" className="text-gray-300 hover:text-electric-purple transition-colors">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-gaming-orange transition-colors">
-                <Youtube className="w-5 h-5" />
-              </a>
-              <a href="#" className="text-gray-300 hover:text-plasma-pink transition-colors">
-                <Twitch className="w-5 h-5" />
+              <a href="#" className="text-white hover:text-vivid-sky-blue transition-colors">
+                <Twitter />
               </a>
             </div>
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-neon-green">Categorías</h3>
+            <h3 className="text-lg font-semibold mb-4">Categorías</h3>
             <ul className="space-y-2">
               {categories.map((category) => (
                 <li key={category.id}>
                   <Link
                     href={`/products?category=${category.id}`}
-                    className="text-gray-300 hover:text-cyber-blue transition-colors"
+                    className="text-gray-200 hover:text-white transition-colors"
                   >
                     {category.name}
                   </Link>
@@ -71,25 +60,25 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-neon-green">Información</h3>
+            <h3 className="text-lg font-semibold mb-4">Información</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/about" className="text-gray-300 hover:text-cyber-blue transition-colors">
+                <Link href="/about" className="text-gray-200 hover:text-white transition-colors">
                   Sobre Nosotros
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-cyber-blue transition-colors">
-                  Soporte
+                <Link href="/contact" className="text-gray-200 hover:text-white transition-colors">
+                  Contacto
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="text-gray-300 hover:text-cyber-blue transition-colors">
+                <Link href="/faq" className="text-gray-200 hover:text-white transition-colors">
                   Preguntas Frecuentes
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-gray-300 hover:text-cyber-blue transition-colors">
+                <Link href="/privacy" className="text-gray-200 hover:text-white transition-colors">
                   Política de Privacidad
                 </Link>
               </li>
@@ -97,20 +86,18 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-neon-green">Contacto</h3>
-            <address className="not-italic text-gray-300 space-y-2">
-              <p>Gaming Center 123</p>
-              <p>Ciudad Gaming, CP 12345</p>
-              <p>Email: support@gamevault.com</p>
-              <p>Teléfono: (123) 456-GAME</p>
+            <h3 className="text-lg font-semibold mb-4">Contacto</h3>
+            <address className="not-italic text-gray-200 space-y-2">
+              <p>Calle Falsa 123</p>
+              <p>Ciudad Ejemplo, CP 12345</p>
+              <p>Email: info@geekwear.com</p>
+              <p>Teléfono: (123) 456-7890</p>
             </address>
           </div>
         </div>
 
-        <div className="border-t border-cyber-blue/20 mt-8 pt-8 text-center text-gray-400">
-          <p>
-            &copy; {new Date().getFullYear()} GameVault. Todos los derechos reservados. Hecho para gamers, por gamers.
-          </p>
+        <div className="border-t border-white/20 mt-8 pt-8 text-center text-gray-300">
+          <p>&copy; {new Date().getFullYear()} GeekWear. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

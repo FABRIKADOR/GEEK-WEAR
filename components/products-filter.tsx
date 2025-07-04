@@ -65,12 +65,10 @@ export function ProductsFilter({
   const applyFilters = () => {
     setIsLoading(true)
     console.log("Applying filters:", { search, categoryId, franchiseId })
-
     const params = new URLSearchParams()
 
-    // Solo agregar parámetros válidos
-    if (search?.trim()) {
-      params.set("q", search.trim())
+    if (search) {
+      params.set("q", search)
     }
 
     if (categoryId) {
@@ -81,9 +79,7 @@ export function ProductsFilter({
       params.set("franchise", franchiseId)
     }
 
-    const queryString = params.toString()
-    const url = queryString ? `${pathname}?${queryString}` : pathname
-
+    const url = `${pathname}?${params.toString()}`
     console.log("Navigating to:", url)
 
     startTransition(() => {
