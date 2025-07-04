@@ -4,9 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart, User, Menu, X, Search, ChevronDown } from "lucide-react"
+import { ShoppingCart, User, Menu, X, Search, ChevronDown, Gamepad2 } from "lucide-react"
 import { useCartStore } from "@/lib/cart"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { supabase } from "@/lib/supabase-client"
 import { CartSidebar } from "./cart-sidebar"
 import { useCartSidebar } from "@/hooks/use-cart-sidebar"
@@ -24,6 +23,7 @@ export default function Header() {
   const cart = useCartStore((state) => state.cart)
   const itemCount = cart.items.reduce((total, item) => total + item.quantity, 0)
   const { openCart } = useCartSidebar()
+  const [loading, setLoading] = useState(false)
 
   // Cerrar dropdown cuando se hace clic fuera
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function Header() {
 
     const fetchCategories = async () => {
       try {
-        const { data } = await supabase.from("categories").select("id,name,slug").order("name")
+        const { data } = await supabase.from("categories").select("id,name,slug").eq("is_visible", true).order("name")
         if (data) {
           setCategories(data)
         }
@@ -114,14 +114,35 @@ export default function Header() {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      setLoading(true)
+      console.log("Cerrando sesión...")
+
+      // Usar la función del contexto de auth
+      await supabase.auth.signOut()
+
+      // Limpiar estado local
       setUser(null)
       setIsAdmin(false)
       setIsProfileOpen(false)
+
+      // Limpiar localStorage
+      if (typeof window !== "undefined") {
+        localStorage.clear()
+      }
+
+      // Redirigir
       router.push("/")
+
+      console.log("Sesión cerrada exitosamente")
     } catch (error) {
-      console.error("Error signing out:", error)
+      console.error("Error cerrando sesión:", error)
+      // Forzar limpieza incluso si hay error
+      setUser(null)
+      setIsAdmin(false)
+      setIsProfileOpen(false)
+      window.location.href = "/"
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -140,82 +161,113 @@ export default function Header() {
     <>
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
-          isScrolled ? "bg-white shadow-md" : "bg-white/80 backdrop-blur-md"
+          isScrolled
+            ? "bg-dark-slate/95 backdrop-blur-md shadow-lg shadow-cyber-blue/20 border-b border-cyber-blue/30"
+            : "bg-dark-slate/80 backdrop-blur-md border-b border-cyber-blue/20"
         }`}
       >
         <div className="w-full max-w-full px-3 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
-            <Link href="/" className="font-bold text-lg sm:text-2xl text-grape flex-shrink-0">
-              GeekWear
+            <Link
+              href="/"
+              className="font-bold text-lg sm:text-2xl text-cyber-blue flex items-center gap-2 flex-shrink-0 hover:text-neon-green transition-colors"
+            >
+              <Gamepad2 className="h-6 w-6 sm:h-8 sm:w-8" />
+              GameVault
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex space-x-4 lg:space-x-6">
               <Link
                 href="/"
-                className={`text-gray-700 hover:text-grape transition-colors text-sm lg:text-base ${
-                  pathname === "/" ? "font-semibold text-grape" : ""
+                className={`text-gray-300 hover:text-cyber-blue transition-colors text-sm lg:text-base ${
+                  pathname === "/" ? "font-semibold text-cyber-blue" : ""
                 }`}
               >
                 Inicio
               </Link>
               <Link
                 href="/productos"
-                className={`text-gray-700 hover:text-grape transition-colors text-sm lg:text-base ${
-                  pathname === "/productos" ? "font-semibold text-grape" : ""
+                className={`text-gray-300 hover:text-cyber-blue transition-colors text-sm lg:text-base ${
+                  pathname === "/productos" ? "font-semibold text-cyber-blue" : ""
                 }`}
               >
-                Productos
+                Juegos
               </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className={`flex items-center text-gray-700 hover:text-grape transition-colors text-sm lg:text-base ${
-                      pathname.startsWith("/productos") && pathname.includes("category")
-                        ? "font-semibold text-grape"
-                        : ""
-                    }`}
-                  >
-                    Categorías <ChevronDown className="ml-1 h-3 w-3 lg:h-4 lg:w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  {categories.map((category) => (
-                    <DropdownMenuItem key={category.id} asChild>
-                      <Link href={`/productos?category=${category.id}`}>{category.name}</Link>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Categorías Dropdown - Desktop */}
+              <div className="relative group">
+                <button
+                  className={`flex items-center text-gray-300 hover:text-cyber-blue transition-colors text-sm lg:text-base ${
+                    pathname.startsWith("/productos") && pathname.includes("category")
+                      ? "font-semibold text-cyber-blue"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    // Toggle dropdown manually
+                    const dropdown = document.getElementById("categories-dropdown")
+                    if (dropdown) {
+                      dropdown.classList.toggle("hidden")
+                    }
+                  }}
+                >
+                  Categorías <ChevronDown className="ml-1 h-3 w-3 lg:h-4 lg:w-4" />
+                </button>
+
+                <div
+                  id="categories-dropdown"
+                  className="hidden absolute top-full left-0 mt-2 w-48 bg-midnight-blue border border-cyber-blue/30 rounded-lg shadow-xl py-2 z-50"
+                >
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/productos?category=${category.id}`}
+                        className="block px-4 py-2 text-sm text-gray-300 hover:bg-cyber-blue/10 hover:text-cyber-blue transition-colors"
+                        onClick={() => {
+                          // Close dropdown after click
+                          const dropdown = document.getElementById("categories-dropdown")
+                          if (dropdown) {
+                            dropdown.classList.add("hidden")
+                          }
+                        }}
+                      >
+                        {category.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-400">No hay categorías disponibles</div>
+                  )}
+                </div>
+              </div>
               <Link
                 href="/about"
-                className={`text-gray-700 hover:text-grape transition-colors text-sm lg:text-base ${
-                  pathname === "/about" ? "font-semibold text-grape" : ""
+                className={`text-gray-300 hover:text-cyber-blue transition-colors text-sm lg:text-base ${
+                  pathname === "/about" ? "font-semibold text-cyber-blue" : ""
                 }`}
               >
-                Sobre Nosotros
+                Nosotros
               </Link>
               <Link
                 href="/contact"
-                className={`text-gray-700 hover:text-grape transition-colors text-sm lg:text-base ${
-                  pathname === "/contact" ? "font-semibold text-grape" : ""
+                className={`text-gray-300 hover:text-cyber-blue transition-colors text-sm lg:text-base ${
+                  pathname === "/contact" ? "font-semibold text-cyber-blue" : ""
                 }`}
               >
-                Contacto
+                Soporte
               </Link>
             </nav>
 
             {/* Actions */}
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-              <button className="text-gray-700 hover:text-grape transition-colors p-1">
+              <button className="text-gray-300 hover:text-cyber-blue transition-colors p-1">
                 <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
 
               <button onClick={openCart} className="relative p-1">
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 hover:text-grape transition-colors" />
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 hover:text-cyber-blue transition-colors" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs">
+                  <span className="absolute -top-1 -right-1 bg-neon-green text-dark-slate text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-[10px] sm:text-xs font-bold animate-pulse-neon">
                     {itemCount}
                   </span>
                 )}
@@ -225,36 +277,36 @@ export default function Header() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={handleProfileClick}
-                    className="flex items-center text-gray-700 hover:text-grape transition-colors p-1 focus:outline-none focus:ring-2 focus:ring-grape focus:ring-opacity-50 rounded"
+                    className="flex items-center text-gray-300 hover:text-cyber-blue transition-colors p-1 focus:outline-none focus:ring-2 focus:ring-cyber-blue focus:ring-opacity-50 rounded"
                   >
                     <User className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
 
                   {isProfileOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-[9999]">
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <div className="font-medium text-gray-900 text-sm">Mi Cuenta</div>
-                        <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                    <div className="absolute right-0 mt-2 w-56 bg-midnight-blue rounded-lg shadow-xl border border-cyber-blue/30 py-2 z-[9999]">
+                      <div className="px-4 py-3 border-b border-cyber-blue/20">
+                        <div className="font-medium text-cyber-blue text-sm">Mi Cuenta</div>
+                        <div className="text-xs text-gray-400 truncate">{user.email}</div>
                       </div>
 
                       <div className="py-1">
                         <button
                           onClick={() => handleLinkClick("/account/profile")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-cyber-blue/10 hover:text-cyber-blue transition-colors"
                         >
                           Perfil
                         </button>
 
                         <button
                           onClick={() => handleLinkClick("/account/orders")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-cyber-blue/10 hover:text-cyber-blue transition-colors"
                         >
-                          Mis Pedidos
+                          Mis Compras
                         </button>
 
                         <button
                           onClick={() => handleLinkClick("/account/wishlist")}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-cyber-blue/10 hover:text-cyber-blue transition-colors"
                         >
                           Lista de Deseos
                         </button>
@@ -262,43 +314,43 @@ export default function Header() {
 
                       {isAdmin && (
                         <>
-                          <div className="border-t border-gray-100 my-1"></div>
-                          <div className="px-4 py-2 text-xs text-gray-500 font-medium uppercase tracking-wider">
+                          <div className="border-t border-cyber-blue/20 my-1"></div>
+                          <div className="px-4 py-2 text-xs text-neon-green font-medium uppercase tracking-wider">
                             Administración
                           </div>
 
                           <div className="py-1">
                             <button
                               onClick={() => handleLinkClick("/admin")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-neon-green/10 hover:text-neon-green transition-colors"
                             >
                               Panel de Control
                             </button>
 
                             <button
                               onClick={() => handleLinkClick("/admin/productos")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-neon-green/10 hover:text-neon-green transition-colors"
                             >
-                              Productos
+                              Juegos
                             </button>
 
                             <button
                               onClick={() => handleLinkClick("/admin/categorias")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-neon-green/10 hover:text-neon-green transition-colors"
                             >
                               Categorías
                             </button>
 
                             <button
                               onClick={() => handleLinkClick("/admin/franquicias")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-neon-green/10 hover:text-neon-green transition-colors"
                             >
-                              Franquicias
+                              Plataformas
                             </button>
 
                             <button
                               onClick={() => handleLinkClick("/admin/orders")}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-neon-green/10 hover:text-neon-green transition-colors"
                             >
                               Pedidos
                             </button>
@@ -306,11 +358,11 @@ export default function Header() {
                         </>
                       )}
 
-                      <div className="border-t border-gray-100 my-1"></div>
+                      <div className="border-t border-cyber-blue/20 my-1"></div>
                       <div className="py-1">
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-plasma-pink hover:bg-plasma-pink/10 transition-colors"
                         >
                           Cerrar Sesión
                         </button>
@@ -320,14 +372,17 @@ export default function Header() {
                 </div>
               ) : (
                 <Link href="/auth/login">
-                  <Button variant="ghost" className="text-gray-700 hover:text-grape transition-colors p-1 h-auto">
+                  <Button variant="ghost" className="text-gray-300 hover:text-cyber-blue transition-colors p-1 h-auto">
                     <User className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 </Link>
               )}
 
               {/* Mobile menu button */}
-              <button className="md:hidden text-gray-700 hover:text-grape transition-colors p-1" onClick={toggleMenu}>
+              <button
+                className="md:hidden text-gray-300 hover:text-cyber-blue transition-colors p-1"
+                onClick={toggleMenu}
+              >
                 <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
@@ -336,13 +391,18 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="fixed inset-0 bg-white z-50 md:hidden overflow-y-auto">
+          <div className="fixed inset-0 bg-dark-slate z-50 md:hidden overflow-y-auto">
             <div className="w-full px-4 py-4">
               <div className="flex justify-between items-center mb-8">
-                <Link href="/" className="font-bold text-2xl text-grape" onClick={closeMenu}>
-                  GeekWear
+                <Link
+                  href="/"
+                  className="font-bold text-2xl text-cyber-blue flex items-center gap-2"
+                  onClick={closeMenu}
+                >
+                  <Gamepad2 className="h-8 w-8" />
+                  GameVault
                 </Link>
-                <button className="text-gray-700 hover:text-grape transition-colors" onClick={closeMenu}>
+                <button className="text-gray-300 hover:text-cyber-blue transition-colors" onClick={closeMenu}>
                   <X className="h-6 w-6" />
                 </button>
               </div>
@@ -350,8 +410,8 @@ export default function Header() {
               <nav className="flex flex-col space-y-6 text-lg">
                 <Link
                   href="/"
-                  className={`text-gray-700 hover:text-grape transition-colors ${
-                    pathname === "/" ? "font-semibold text-grape" : ""
+                  className={`text-gray-300 hover:text-cyber-blue transition-colors ${
+                    pathname === "/" ? "font-semibold text-cyber-blue" : ""
                   }`}
                   onClick={closeMenu}
                 >
@@ -359,18 +419,18 @@ export default function Header() {
                 </Link>
                 <Link
                   href="/productos"
-                  className={`text-gray-700 hover:text-grape transition-colors ${
-                    pathname === "/productos" ? "font-semibold text-grape" : ""
+                  className={`text-gray-300 hover:text-cyber-blue transition-colors ${
+                    pathname === "/productos" ? "font-semibold text-cyber-blue" : ""
                   }`}
                   onClick={closeMenu}
                 >
-                  Productos
+                  Juegos
                 </Link>
                 <div>
                   <h3
-                    className={`text-gray-700 font-medium mb-2 ${
+                    className={`text-gray-300 font-medium mb-2 ${
                       pathname.startsWith("/productos") && pathname.includes("category")
-                        ? "font-semibold text-grape"
+                        ? "font-semibold text-cyber-blue"
                         : ""
                     }`}
                   >
@@ -381,7 +441,7 @@ export default function Header() {
                       <Link
                         key={category.id}
                         href={`/productos?category=${category.id}`}
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-cyber-blue transition-colors"
                         onClick={closeMenu}
                       >
                         {category.name}
@@ -391,58 +451,58 @@ export default function Header() {
                 </div>
                 <Link
                   href="/about"
-                  className={`text-gray-700 hover:text-grape transition-colors ${
-                    pathname === "/about" ? "font-semibold text-grape" : ""
+                  className={`text-gray-300 hover:text-cyber-blue transition-colors ${
+                    pathname === "/about" ? "font-semibold text-cyber-blue" : ""
                   }`}
                   onClick={closeMenu}
                 >
-                  Sobre Nosotros
+                  Nosotros
                 </Link>
                 <Link
                   href="/contact"
-                  className={`text-gray-700 hover:text-grape transition-colors ${
-                    pathname === "/contact" ? "font-semibold text-grape" : ""
+                  className={`text-gray-300 hover:text-cyber-blue transition-colors ${
+                    pathname === "/contact" ? "font-semibold text-cyber-blue" : ""
                   }`}
                   onClick={closeMenu}
                 >
-                  Contacto
+                  Soporte
                 </Link>
 
                 {isAdmin && (
                   <div>
-                    <h3 className="text-gray-700 font-medium mb-2">Administración</h3>
+                    <h3 className="text-neon-green font-medium mb-2">Administración</h3>
                     <div className="pl-4 space-y-2">
                       <Link
                         href="/admin"
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-neon-green transition-colors"
                         onClick={closeMenu}
                       >
                         Panel de Control
                       </Link>
                       <Link
                         href="/admin/productos"
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-neon-green transition-colors"
                         onClick={closeMenu}
                       >
-                        Productos
+                        Juegos
                       </Link>
                       <Link
                         href="/admin/categorias"
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-neon-green transition-colors"
                         onClick={closeMenu}
                       >
                         Categorías
                       </Link>
                       <Link
                         href="/admin/franquicias"
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-neon-green transition-colors"
                         onClick={closeMenu}
                       >
-                        Franquicias
+                        Plataformas
                       </Link>
                       <Link
                         href="/admin/orders"
-                        className="block text-gray-600 hover:text-grape transition-colors"
+                        className="block text-gray-400 hover:text-neon-green transition-colors"
                         onClick={closeMenu}
                       >
                         Pedidos
@@ -455,13 +515,13 @@ export default function Header() {
                   <>
                     <Link
                       href="/account/profile"
-                      className="block py-2 text-gray-700 hover:text-grape transition-colors"
+                      className="block py-2 text-gray-300 hover:text-cyber-blue transition-colors"
                       onClick={closeMenu}
                     >
                       Mi Perfil
                     </Link>
                     <button
-                      className="text-left text-gray-700 hover:text-grape transition-colors"
+                      className="text-left text-gray-300 hover:text-plasma-pink transition-colors"
                       onClick={() => {
                         handleSignOut()
                         closeMenu()
@@ -473,7 +533,7 @@ export default function Header() {
                 ) : (
                   <Link
                     href="/auth/login"
-                    className="text-gray-700 hover:text-grape transition-colors"
+                    className="text-gray-300 hover:text-cyber-blue transition-colors"
                     onClick={closeMenu}
                   >
                     Iniciar Sesión

@@ -7,6 +7,7 @@ export interface Category {
   description?: string
   image_url?: string
   parent_id?: string | null
+  is_visible?: boolean
   created_at?: string
   updated_at?: string
 }
@@ -24,6 +25,27 @@ export const categoryService = {
       return data || []
     } catch (error) {
       console.error("Error in getCategories:", error)
+      return []
+    }
+  },
+
+  // Nueva función para obtener solo categorías visibles (para el frontend público)
+  async getVisibleCategories(): Promise<Category[]> {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_visible", true)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching visible categories:", error)
+        throw error
+      }
+
+      return data || []
+    } catch (error) {
+      console.error("Error in getVisibleCategories:", error)
       return []
     }
   },
@@ -61,6 +83,7 @@ export const categoryService = {
           {
             ...category,
             slug,
+            is_visible: category.is_visible ?? true, // Por defecto visible
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           },
@@ -108,6 +131,31 @@ export const categoryService = {
       return data
     } catch (error) {
       console.error("Error in updateCategory:", error)
+      throw error
+    }
+  },
+
+  // Nueva función para cambiar visibilidad de categoría
+  async toggleCategoryVisibility(id: string, isVisible: boolean): Promise<Category> {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .update({
+          is_visible: isVisible,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Error toggling category visibility:", error)
+        throw error
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error in toggleCategoryVisibility:", error)
       throw error
     }
   },

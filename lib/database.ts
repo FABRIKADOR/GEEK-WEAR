@@ -13,13 +13,17 @@ export async function getProducts(
   console.log("Fetching products with params:", { limit, page, categoryId, franchiseId, featured, searchQuery })
 
   try {
-    // Construir la consulta con manejo de errores mejorado
+    // Validar parámetros de entrada
+    if (page < 1) page = 1
+    if (limit < 1) limit = 10
+    if (limit > 100) limit = 100
+
     let query = supabase
       .from("products")
       .select(
         `
     *,
-    categories(id, name, slug, description),
+    categories!inner(id, name, slug, description, is_visible),
     images:product_images(*),
     product_franchises(
       franchise_id,
@@ -29,15 +33,16 @@ export async function getProducts(
         { count: "exact" },
       )
       .eq("is_active", true)
+      .eq("categories.is_visible", true)
       .order("created_at", { ascending: false })
 
-    // Aplicar filtros
-    if (categoryId) {
+    // Aplicar filtros solo si son válidos
+    if (categoryId && categoryId !== "undefined") {
       console.log("Filtering by category ID:", categoryId)
       query = query.eq("category_id", categoryId)
     }
 
-    if (franchiseId) {
+    if (franchiseId && franchiseId !== "undefined") {
       console.log("Filtering by franchise ID:", franchiseId)
       query = query.eq("franchise_id", franchiseId)
     }
@@ -46,31 +51,29 @@ export async function getProducts(
       query = query.eq("featured", featured)
     }
 
-    if (searchQuery) {
-      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+    if (searchQuery && searchQuery.trim() && searchQuery !== "undefined") {
+      const cleanQuery = searchQuery.trim()
+      query = query.or(`name.ilike.%${cleanQuery}%,description.ilike.%${cleanQuery}%`)
     }
 
     // Aplicar paginación
     query = query.range((page - 1) * limit, page * limit - 1)
 
-    // Ejecutar la consulta con retry
     const { data, error, count } = await query
 
     if (error) {
       console.error("Error fetching products:", error)
-      // Si hay error, devolver datos vacíos en lugar de lanzar excepción
       return { data: [], count: 0 }
     }
 
     console.log(`Found ${count || 0} products, returning ${data?.length || 0} items`)
 
-    // Transformar los datos para que coincidan con el tipo ProductWithDetails
     const productsWithDetails =
       data?.map((product) => {
         return {
           ...product,
-          category: product.categories || null, // Asignar la categoría correctamente
-          variants: [], // Inicializar con arrays vacíos para evitar errores
+          category: product.categories || null,
+          variants: [],
           tags: [],
           franchises: product.product_franchises?.map((pf) => pf.franchises) || [],
         } as ProductWithDetails
@@ -82,7 +85,6 @@ export async function getProducts(
     }
   } catch (error) {
     console.error("Unexpected error fetching products:", error)
-    // En caso de error inesperado, devolver datos vacíos
     return { data: [], count: 0 }
   }
 }
@@ -94,7 +96,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithDetails
       .select(
         `
   *,
-  categories(id, name, slug, description),
+  categories!inner(id, name, slug, description, is_visible),
   images:product_images(*),
   product_franchises(
     franchise_id,
@@ -104,6 +106,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithDetails
       )
       .eq("slug", slug)
       .eq("is_active", true)
+      .eq("categories.is_visible", true) // Solo productos de categorías visibles
       .single()
 
     if (error) {
@@ -134,7 +137,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
       .select(
         `
   *,
-  categories(id, name, slug, description),
+  categories!inner(id, name, slug, description, is_visible),
   images:product_images(*),
   product_franchises(
     franchise_id,
@@ -143,6 +146,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
   `,
       )
       .eq("id", id)
+      .eq("categories.is_visible", true) // Solo productos de categorías visibles
       .single()
 
     if (error) {
@@ -166,7 +170,7 @@ export async function getProductById(id: string): Promise<ProductWithDetails | n
   }
 }
 
-// Categories
+// Categories - Función para admin (todas las categorías)
 export async function getCategories(): Promise<Category[]> {
   try {
     console.log("Fetching categories from database...")
@@ -185,9 +189,33 @@ export async function getCategories(): Promise<Category[]> {
   }
 }
 
+// Nueva función para frontend público (solo categorías visibles)
+export async function getVisibleCategories(): Promise<Category[]> {
+  try {
+    console.log("Fetching visible categories from database...")
+    const { data, error } = await supabase.from("categories").select("*").eq("is_visible", true).order("name")
+
+    if (error) {
+      console.error("Error al obtener categorías visibles:", error)
+      return []
+    }
+
+    console.log(`Found ${data.length} visible categories`)
+    return data as Category[]
+  } catch (error) {
+    console.error("Error inesperado al obtener categorías visibles:", error)
+    return []
+  }
+}
+
 export async function getCategoryBySlug(slug: string): Promise<Category | null> {
   try {
-    const { data, error } = await supabase.from("categories").select("*").eq("slug", slug).single()
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("slug", slug)
+      .eq("is_visible", true) // Solo categorías visibles
+      .single()
 
     if (error) {
       console.error("Error al obtener categoría:", error)

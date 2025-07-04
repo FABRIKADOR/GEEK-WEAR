@@ -15,9 +15,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Edit, Trash2, Tag, Eye, EyeOff } from "lucide-react"
 import { categoryService, type Category } from "@/services/category-service"
 import { toast } from "sonner"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-export default function AdminCategoriesPage() {
+export default function AdminCategoriesNewPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -36,9 +35,8 @@ export default function AdminCategoriesPage() {
   const loadCategories = async () => {
     try {
       setLoading(true)
-      console.log("🔍 Cargando categorías...")
       const data = await categoryService.getCategories()
-      console.log("✅ Categorías cargadas:", data)
+      console.log("✅ Categorías cargadas (NEW):", data)
       setCategories(data)
     } catch (error) {
       console.error("❌ Error loading categories:", error)
@@ -50,6 +48,7 @@ export default function AdminCategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("📝 Enviando formulario (NEW):", formData)
 
     if (!formData.name.trim()) {
       toast.error("El nombre es requerido")
@@ -70,12 +69,13 @@ export default function AdminCategoriesPage() {
       setIsCreateOpen(false)
       loadCategories()
     } catch (error) {
-      console.error("Error saving category:", error)
+      console.error("❌ Error saving category:", error)
       toast.error("Error al guardar la categoría")
     }
   }
 
   const handleEdit = (category: Category) => {
+    console.log("✏️ Editando categoría (NEW):", category)
     setEditingCategory(category)
     setFormData({
       name: category.name,
@@ -84,6 +84,18 @@ export default function AdminCategoriesPage() {
       is_visible: category.is_visible ?? true,
     })
     setIsCreateOpen(true)
+  }
+
+  const handleToggleVisibility = async (id: string, currentVisibility: boolean) => {
+    console.log("👁️ Cambiando visibilidad (NEW):", { id, currentVisibility })
+    try {
+      await categoryService.toggleCategoryVisibility(id, !currentVisibility)
+      toast.success(`Categoría ${!currentVisibility ? "mostrada" : "ocultada"} exitosamente`)
+      loadCategories()
+    } catch (error) {
+      console.error("❌ Error toggling visibility:", error)
+      toast.error("Error al cambiar la visibilidad")
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -96,26 +108,8 @@ export default function AdminCategoriesPage() {
       toast.success("Categoría eliminada exitosamente")
       loadCategories()
     } catch (error) {
-      console.error("Error deleting category:", error)
+      console.error("❌ Error deleting category:", error)
       toast.error("Error al eliminar la categoría")
-    }
-  }
-
-  const handleToggleVisibility = async (category: Category) => {
-    try {
-      const newVisibility = !category.is_visible
-      await categoryService.updateCategory(category.id!, {
-        name: category.name,
-        description: category.description || "",
-        image_url: category.image_url || "",
-        is_visible: newVisibility,
-      })
-
-      toast.success(`Categoría ${newVisibility ? "mostrada" : "ocultada"} exitosamente`)
-      loadCategories()
-    } catch (error) {
-      console.error("Error toggling visibility:", error)
-      toast.error("Error al cambiar la visibilidad")
     }
   }
 
@@ -124,19 +118,41 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null)
   }
 
+  if (loading) {
+    return (
+      <AdminCheck>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent"></div>
+          </div>
+        </div>
+      </AdminCheck>
+    )
+  }
+
   return (
     <AdminCheck>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Gestionar Categorías</h1>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <div>
+            <h1 className="text-2xl font-bold">Gestionar Categorías (Nueva Versión)</h1>
+            <p className="text-sm text-muted-foreground">Con funcionalidad de visibilidad</p>
+          </div>
+          <Dialog
+            open={isCreateOpen}
+            onOpenChange={(open) => {
+              console.log("🔄 Dialog state changed (NEW):", open)
+              setIsCreateOpen(open)
+              if (!open) resetForm()
+            }}
+          >
             <DialogTrigger asChild>
-              <Button onClick={() => setIsCreateOpen(true)}>
+              <Button onClick={() => console.log("➕ Botón Nueva Categoría clickeado (NEW)")}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nueva Categoría
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>{editingCategory ? "Editar Categoría" : "Crear Nueva Categoría"}</DialogTitle>
               </DialogHeader>
@@ -147,7 +163,7 @@ export default function AdminCategoriesPage() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Ej: Playeras, Hoodies, Accesorios"
+                    placeholder="Ej: Juegos AAA, Membresías, DLCs"
                     required
                   />
                 </div>
@@ -171,23 +187,21 @@ export default function AdminCategoriesPage() {
                     type="url"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/50">
                   <Switch
                     id="is_visible"
                     checked={formData.is_visible}
                     onCheckedChange={(checked) => setFormData({ ...formData, is_visible: checked })}
                   />
-                  <Label htmlFor="is_visible">Visible en el sitio web</Label>
+                  <Label htmlFor="is_visible" className="font-medium">
+                    Visible en el sitio web
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
+                    ({formData.is_visible ? "Se mostrará" : "Se ocultará"} en el ecommerce)
+                  </span>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsCreateOpen(false)
-                      resetForm()
-                    }}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                     Cancelar
                   </Button>
                   <Button type="submit">{editingCategory ? "Actualizar" : "Crear"}</Button>
@@ -205,11 +219,7 @@ export default function AdminCategoriesPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <LoadingSpinner />
-              </div>
-            ) : categories.length === 0 ? (
+            {categories.length === 0 ? (
               <div className="text-center py-8">
                 <Tag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No hay categorías creadas</p>
@@ -222,7 +232,7 @@ export default function AdminCategoriesPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead>Visibilidad</TableHead>
+                    <TableHead className="text-center">Visibilidad</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -236,36 +246,38 @@ export default function AdminCategoriesPage() {
                         <code className="text-sm bg-muted px-2 py-1 rounded">{category.slug}</code>
                       </TableCell>
                       <TableCell className="max-w-xs truncate">{category.description || "-"}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center space-x-2">
                           <Switch
                             checked={category.is_visible ?? true}
-                            onCheckedChange={() => handleToggleVisibility(category)}
+                            onCheckedChange={() => handleToggleVisibility(category.id!, category.is_visible ?? true)}
                             size="sm"
                           />
-                          <span className="text-sm text-muted-foreground">
-                            {(category.is_visible ?? true) ? (
-                              <div className="flex items-center text-green-600">
-                                <Eye className="h-4 w-4 mr-1" />
-                                Visible
-                              </div>
-                            ) : (
-                              <div className="flex items-center text-gray-500">
-                                <EyeOff className="h-4 w-4 mr-1" />
-                                Oculta
-                              </div>
-                            )}
+                          <span className="text-xs text-muted-foreground">
+                            {(category.is_visible ?? true) ? "Visible" : "Oculta"}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={(category.is_visible ?? true) ? "default" : "secondary"}>
-                          {(category.is_visible ?? true) ? "Activa" : "Inactiva"}
+                          {(category.is_visible ?? true) ? "Activa" : "Oculta"}
                         </Badge>
                       </TableCell>
-                      <TableCell>{new Date(category.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(category.created_at!).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleVisibility(category.id!, category.is_visible ?? true)}
+                            title={(category.is_visible ?? true) ? "Ocultar categoría" : "Mostrar categoría"}
+                          >
+                            {(category.is_visible ?? true) ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(category)}>
                             <Edit className="h-4 w-4" />
                           </Button>
