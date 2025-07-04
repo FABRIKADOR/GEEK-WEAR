@@ -1,27 +1,20 @@
 import type React from "react"
-import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/contexts/auth-context"
+import { ThemeProvider } from "@/components/theme-provider"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import ScrollToTop from "@/components/scroll-to-top"
+import { CartProvider } from "@/hooks/use-cart"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Recordatorio XV Años Camila Aguilar Nowell",
-  description:
-    "Te invitamos a celebrar los XV años de Camila del Cielo Aguilar Nowell el 4 de Julio, 2025 a las 7:00 PM en Salón Diamante",
-  openGraph: {
-    title: "Recordatorio XV Años Camila Aguilar Nowell",
-    description:
-      "Te invitamos a celebrar los XV años de Camila del Cielo Aguilar Nowell el 4 de Julio, 2025 a las 7:00 PM en Salón Diamante",
-    type: "website",
-    locale: "es_MX",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Recordatorio XV Años Camila Aguilar Nowell",
-    description:
-      "Te invitamos a celebrar los XV años de Camila del Cielo Aguilar Nowell el 4 de Julio, 2025 a las 7:00 PM en Salón Diamante",
-  },
+export const metadata = {
+  title: "GeekWear - Tienda de Camisetas Geek",
+  description: "La mejor tienda de camisetas geek y anime",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
     generator: 'v0.dev'
 }
 
@@ -31,23 +24,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className="overflow-x-hidden">
       <head>
-        <meta property="og:title" content="Recordatorio XV Años Camila Aguilar Nowell" />
-        <meta
-          property="og:description"
-          content="Te invitamos a celebrar los XV años de Camila del Cielo Aguilar Nowell el 4 de Julio, 2025 a las 7:00 PM en Salón Diamante"
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:locale" content="es_MX" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Recordatorio XV Años Camila Aguilar Nowell" />
-        <meta
-          name="twitter:description"
-          content="Te invitamos a celebrar los XV años de Camila del Cielo Aguilar Nowell el 4 de Julio, 2025 a las 7:00 PM en Salón Diamante"
-        />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <CartProvider>
+              <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+                <Header />
+                <main className="flex-1 w-full overflow-x-hidden">{children}</main>
+                <Footer />
+              </div>
+              <ScrollToTop />
+              <Toaster />
+            </CartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
     </html>
   )
 }

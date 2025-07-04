@@ -1,14 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    domains: ['ufmscjskhxvzybfpfknr.supabase.co'], // Add your Supabase domain for image storage
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+    unoptimized: true, // Desactivar optimización de imágenes
+  },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // Ignorar errores de ESLint durante la compilación
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Ignorar errores de TypeScript durante la compilación
   },
-  images: {
-    unoptimized: true,
+  // Asegurar que no hay middleware
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
