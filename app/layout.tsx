@@ -1,39 +1,50 @@
+import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from 'next/font/google'
+import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/contexts/auth-context"
 import { CartProvider } from "@/hooks/use-cart"
-import { Toaster } from "@/components/ui/toaster"
-import Header from "@/components/header"
-import Footer from "@/components/footer"
-import ScrollToTop from "@/components/scroll-to-top"
 import Chatbox from "@/components/chatbox"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "GeekWear - Ropa Geek y Anime",
-  description: "Descubre la mejor colección de ropa geek, anime y gaming. Camisetas, hoodies y accesorios únicos para verdaderos fanáticos.",
-  keywords: ["ropa geek", "anime", "gaming", "camisetas", "hoodies", "manga", "otaku"],
-  authors: [{ name: "GeekWear" }],
+  title: "GeekWear - Tu Tienda Geek Favorita",
+  description:
+    "Descubre la mejor colección de camisetas, accesorios y productos geek. Anime, gaming, tecnología y más en GeekWear México.",
+  keywords: ["geek", "anime", "gaming", "camisetas", "accesorios", "tecnología", "México"],
+  authors: [{ name: "GeekWear Team" }],
   creator: "GeekWear",
   publisher: "GeekWear",
-  robots: {
-    index: true,
-    follow: true,
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
   },
   openGraph: {
+    title: "GeekWear - Tu Tienda Geek Favorita",
+    description: "Descubre la mejor colección de productos geek en México",
     type: "website",
     locale: "es_MX",
     siteName: "GeekWear",
-    title: "GeekWear - Ropa Geek y Anime",
-    description: "Descubre la mejor colección de ropa geek, anime y gaming.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "GeekWear - Ropa Geek y Anime",
-    description: "Descubre la mejor colección de ropa geek, anime y gaming.",
+    title: "GeekWear - Tu Tienda Geek Favorita",
+    description: "Descubre la mejor colección de productos geek en México",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
     generator: 'v0.dev'
 }
@@ -46,24 +57,12 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <CartProvider>
-              <div className="flex flex-col min-h-screen">
-                <Header />
-                <main className="flex-1">
-                  {children}
-                </main>
-                <Footer />
-              </div>
-              <ScrollToTop />
-              <Chatbox />
+              {children}
               <Toaster />
+              <Chatbox />
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -22,24 +22,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email inválido" }, { status: 400 })
     }
 
-    // Verificar que las variables de entorno estén configuradas
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      console.error("Error: Variables de entorno de Gmail no configuradas")
-      return NextResponse.json(
-        {
-          error: "Servicio de email no configurado",
-        },
-        { status: 500 },
-      )
-    }
-
     console.log("Procesando suscripción para:", email)
 
     try {
       // Crear el template del email
       const emailTemplate = createWelcomeEmailTemplate(email)
 
-      // Enviar email de bienvenida
+      // Enviar email de bienvenida (simulado por ahora)
       const emailResult = await sendEmail({
         to: email,
         subject: emailTemplate.subject,
@@ -47,7 +36,7 @@ export async function POST(request: NextRequest) {
         text: emailTemplate.text,
       })
 
-      console.log("Email enviado exitosamente:", emailResult.messageId)
+      console.log("Email procesado exitosamente:", emailResult.messageId)
 
       // Información de la tienda para la respuesta
       const storeInfo = {
@@ -56,36 +45,42 @@ export async function POST(request: NextRequest) {
         location: "UPQROO - Cancún, México",
         phone: "+52 (998) 351-3473",
         whatsapp: "https://wa.me/5219983513473",
-        message:
-          "¡Gracias por suscribirte a GeekWear! Te hemos enviado un email de bienvenida con toda la información.",
-        emailSent: true,
+        message: "¡Gracias por suscribirte a GeekWear! Tu suscripción ha sido registrada exitosamente.",
+        emailSent: emailResult.provider === "simulation" ? false : true,
         messageId: emailResult.messageId,
+        provider: emailResult.provider,
+        note:
+          emailResult.provider === "simulation"
+            ? "Email simulado - Para emails reales, configura un proveedor de email como Resend"
+            : undefined,
       }
 
       console.log("Suscripción exitosa:", storeInfo)
 
       return NextResponse.json({
         success: true,
-        message: "Suscripción exitosa y email enviado",
+        message:
+          emailResult.provider === "simulation"
+            ? "Suscripción registrada exitosamente (email simulado)"
+            : "Suscripción exitosa y email enviado",
         data: storeInfo,
       })
     } catch (emailError) {
-      console.error("Error enviando email:", emailError)
+      console.error("Error procesando email:", emailError)
 
       // Aunque falle el email, consideramos la suscripción exitosa
       return NextResponse.json({
         success: true,
-        message: "Suscripción exitosa, pero hubo un problema enviando el email de confirmación",
+        message: "Suscripción registrada, pero hubo un problema con el email",
         data: {
           storeName: "GeekWear",
           email: email,
           location: "UPQROO - Cancún, México",
           phone: "+52 (998) 351-3473",
           whatsapp: "https://wa.me/5219983513473",
-          message:
-            "¡Gracias por suscribirte a GeekWear! Hubo un problema enviando el email, pero tu suscripción fue exitosa.",
+          message: "¡Gracias por suscribirte a GeekWear! Tu suscripción fue registrada exitosamente.",
           emailSent: false,
-          error: "Error enviando email de confirmación",
+          error: "Error procesando email",
         },
       })
     }

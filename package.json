@@ -46,7 +46,7 @@
     "mercadopago": "latest",
     "next": "14.2.16",
     "next-themes": "latest",
-    "nodemailer": "latest",
+    "nodemailer": "^6.9.8",
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "latest",

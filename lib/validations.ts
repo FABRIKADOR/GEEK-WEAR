@@ -1,111 +1,98 @@
 import { z } from "zod"
 
-// Expresiones regulares para validación
-export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-export const PHONE_REGEX = /^(\+52|52)?[\s-]?(\d{2})[\s-]?(\d{4})[\s-]?(\d{4})$/
-export const NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,50}$/
-export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-
 // Esquemas de validación con Zod
-export const passwordSchema = z
-  .string()
-  .min(8, "La contraseña debe tener al menos 8 caracteres")
-  .regex(
-    PASSWORD_REGEX,
-    "La contraseña debe contener al menos: 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial",
-  )
-
-export const emailSchema = z
-  .string()
-  .email("Formato de email inválido")
-  .regex(EMAIL_REGEX, "Email debe tener un formato válido")
-
-export const phoneSchema = z.string().regex(PHONE_REGEX, "Formato de teléfono inválido (ej: +52 55 1234 5678)")
-
-export const nameSchema = z
+const emailSchema = z.string().email("Email inválido")
+const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
+const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Número de teléfono inválido")
+const nameSchema = z
   .string()
   .min(2, "El nombre debe tener al menos 2 caracteres")
-  .max(50, "El nombre no puede exceder 50 caracteres")
-  .regex(NAME_REGEX, "El nombre solo puede contener letras y espacios")
+  .max(50, "El nombre no puede tener más de 50 caracteres")
 
-export const userRegistrationSchema = z
+// Funciones de validación
+export function validateEmail(email: string): { isValid: boolean; error?: string } {
+  try {
+    emailSchema.parse(email)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0].message }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export function validatePassword(password: string): { isValid: boolean; error?: string } {
+  try {
+    passwordSchema.parse(password)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0].message }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export function validatePhone(phone: string): { isValid: boolean; error?: string } {
+  try {
+    phoneSchema.parse(phone)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0].message }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export function validateName(name: string): { isValid: boolean; error?: string } {
+  try {
+    nameSchema.parse(name)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0].message }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+// Esquemas adicionales para formularios
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+})
+
+export const registerSchema = z
   .object({
-    fullName: nameSchema,
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: z.string(),
-    phone: phoneSchema.optional(),
+    firstName: nameSchema,
+    lastName: nameSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
   })
 
-export const loginSchema = z.object({
+export const profileSchema = z.object({
+  firstName: nameSchema,
+  lastName: nameSchema,
+  phone: phoneSchema.optional(),
   email: emailSchema,
-  password: z.string().min(1, "La contraseña es requerida"),
 })
 
-// Validación para exportación
-export const exportSchema = z.object({
-  type: z.enum(["products", "orders", "users", "categories", "franchises"]),
-  filters: z
-    .object({
-      dateFrom: z.string().optional(),
-      dateTo: z.string().optional(),
-      category: z.string().optional(),
-      franchise: z.string().optional(),
-      status: z.string().optional(),
-    })
-    .optional(),
-  format: z.enum(["xlsx", "csv"]).default("xlsx"),
+export const addressSchema = z.object({
+  street: z.string().min(5, "La dirección debe tener al menos 5 caracteres"),
+  city: z.string().min(2, "La ciudad debe tener al menos 2 caracteres"),
+  state: z.string().min(2, "El estado debe tener al menos 2 caracteres"),
+  zipCode: z.string().min(5, "El código postal debe tener al menos 5 caracteres"),
+  country: z.string().min(2, "El país debe tener al menos 2 caracteres"),
 })
 
-// Funciones de validación individuales requeridas
-export const validateEmail = (email: string): { isValid: boolean; error?: string } => {
-  try {
-    emailSchema.parse(email)
-    return { isValid: true }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0]?.message || "Email inválido" }
-    }
-    return { isValid: false, error: "Error de validación" }
-  }
-}
-
-export const validatePassword = (password: string): { isValid: boolean; error?: string } => {
-  try {
-    passwordSchema.parse(password)
-    return { isValid: true }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0]?.message || "Contraseña inválida" }
-    }
-    return { isValid: false, error: "Error de validación" }
-  }
-}
-
-export const validatePhone = (phone: string): { isValid: boolean; error?: string } => {
-  try {
-    phoneSchema.parse(phone)
-    return { isValid: true }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0]?.message || "Teléfono inválido" }
-    }
-    return { isValid: false, error: "Error de validación" }
-  }
-}
-
-export const validateName = (name: string): { isValid: boolean; error?: string } => {
-  try {
-    nameSchema.parse(name)
-    return { isValid: true }
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0]?.message || "Nombre inválido" }
-    }
-    return { isValid: false, error: "Error de validación" }
-  }
-}
+export type LoginFormData = z.infer<typeof loginSchema>
+export type RegisterFormData = z.infer<typeof registerSchema>
+export type ProfileFormData = z.infer<typeof profileSchema>
+export type AddressFormData = z.infer<typeof addressSchema>
