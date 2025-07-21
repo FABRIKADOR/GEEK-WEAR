@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Send, Mail, Phone, MapPin, Clock, Zap, Shield, Navigation, ExternalLink } from "lucide-react"
+import { Send, Mail, Phone, MapPin, Clock, Zap, Shield, Navigation, ExternalLink, MessageCircle } from "lucide-react"
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +15,11 @@ const ContactPage = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const [newsletterEmail, setNewsletterEmail] = useState("")
+  const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false)
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false)
+  const [newsletterError, setNewsletterError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +42,53 @@ const ContactPage = () => {
     }))
   }
 
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setNewsletterError("")
+
+    if (!newsletterEmail.trim()) {
+      setNewsletterError("Por favor ingresa un email válido")
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(newsletterEmail)) {
+      setNewsletterError("Por favor ingresa un email válido")
+      return
+    }
+
+    setIsNewsletterSubmitting(true)
+    console.log("Iniciando suscripción con email:", newsletterEmail)
+
+    try {
+      const response = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: newsletterEmail }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        console.log("Suscripción exitosa:", data)
+        setIsNewsletterSubmitting(false)
+        setNewsletterSubmitted(true)
+        setNewsletterEmail("")
+
+        // Ocultar mensaje después de 8 segundos
+        setTimeout(() => setNewsletterSubmitted(false), 8000)
+      } else {
+        throw new Error(data.error || "Error en la suscripción")
+      }
+    } catch (error) {
+      console.error("Error en suscripción:", error)
+      setIsNewsletterSubmitting(false)
+      setNewsletterError(error instanceof Error ? error.message : "Error al suscribirse. Por favor intenta de nuevo.")
+    }
+  }
+
   const contactChannels = [
     {
       icon: Mail,
@@ -49,8 +101,21 @@ const ContactPage = () => {
       icon: Phone,
       title: "Línea Directa",
       description: "Soporte 24/7 para emergencias geek",
-      value: "+52 (998) 123-4567",
+      value: "+52 (998) 351-3473",
       color: "from-green-500 to-emerald-500",
+    },
+    {
+      icon: MessageCircle,
+      title: "WhatsApp Geek",
+      description: "Chat directo con nuestro equipo",
+      value: "¡Chatea ahora!",
+      color: "from-green-400 to-green-600",
+      action: () => {
+        const message = encodeURIComponent(
+          "Hola, me interesa obtener información sobre los productos de GeekWear. ¿Podrían ayudarme?",
+        )
+        window.open(`https://wa.me/5219983513473?text=${message}`, "_blank")
+      },
     },
     {
       icon: MapPin,
@@ -125,6 +190,8 @@ const ContactPage = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
                 className="relative group h-64"
+                onClick={channel.action}
+                style={{ cursor: channel.action ? "pointer" : "default" }}
               >
                 <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 h-full relative overflow-hidden flex flex-col">
                   <div
@@ -141,7 +208,11 @@ const ContactPage = () => {
 
                   <h3 className="text-lg font-bold text-white mb-2">{channel.title}</h3>
                   <p className="text-gray-400 text-sm mb-3 flex-grow">{channel.description}</p>
-                  <p className="text-cyan-400 font-semibold text-sm">{channel.value}</p>
+                  <p className={`${channel.action ? "text-green-400" : "text-cyan-400"} font-semibold text-sm`}>
+                    {channel.value}
+                  </p>
+
+                  {channel.action && <div className="mt-2 text-xs text-gray-500">Click para abrir WhatsApp</div>}
                 </div>
               </motion.div>
             ))}
@@ -204,7 +275,7 @@ const ContactPage = () => {
                       </div>
                       <div className="flex items-center">
                         <Phone className="w-3 h-3 mr-2" />
-                        +52 (998) 123-4567
+                        +52 (998) 351-3473
                       </div>
                       <div className="flex items-center">
                         <Clock className="w-3 h-3 mr-2" />
@@ -248,7 +319,7 @@ const ContactPage = () => {
                   </p>
                   <p className="flex items-center">
                     <Phone className="w-4 h-4 mr-2 text-green-400" />
-                    +52 (998) 123-4567
+                    +52 (998) 351-3473
                   </p>
                   <p className="flex items-center">
                     <Clock className="w-4 h-4 mr-2 text-orange-400" />
@@ -465,7 +536,7 @@ const ContactPage = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-1">Teléfono</h3>
-                      <p className="text-gray-300">+52 (998) 123-4567</p>
+                      <p className="text-gray-300">+52 (998) 351-3473</p>
                     </div>
                   </div>
 
@@ -509,6 +580,154 @@ const ContactPage = () => {
           </div>
         </div>
       </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 rounded-3xl p-12 text-center relative overflow-hidden"
+          >
+            {/* Efectos de fondo */}
+            <div className="absolute inset-0">
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 bg-white/20 rounded-full"
+                  initial={{
+                    x: Math.random() * 100 + "%",
+                    y: Math.random() * 100 + "%",
+                  }}
+                  animate={{
+                    y: [null, -20, 0],
+                    opacity: [0.2, 0.6, 0.2],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 2,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="relative z-10">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="text-4xl md:text-5xl font-bold text-white mb-6"
+              >
+                ¡Únete a la Comunidad Geek!
+              </motion.h2>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto"
+              >
+                Sé el primero en conocer nuestras ofertas exclusivas y nuevos productos
+              </motion.p>
+
+              <motion.form
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                onSubmit={handleNewsletterSubmit}
+                className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-6"
+              >
+                <input
+                  type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  placeholder="Tu email aquí..."
+                  required
+                  className="flex-1 px-6 py-4 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-white/30 transition-all duration-300"
+                />
+                <motion.button
+                  type="submit"
+                  disabled={isNewsletterSubmitting}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-white text-purple-700 font-bold px-8 py-4 rounded-xl hover:bg-purple-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isNewsletterSubmitting ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-purple-700 border-t-transparent rounded-full mx-auto"
+                    />
+                  ) : (
+                    "Suscribirse"
+                  )}
+                </motion.button>
+              </motion.form>
+
+              {/* Mostrar errores */}
+              {newsletterError && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-red-500/20 border border-red-400/30 rounded-xl p-4 mb-4"
+                >
+                  <p className="text-red-200 text-sm">❌ {newsletterError}</p>
+                </motion.div>
+              )}
+
+              {/* Mostrar éxito */}
+              {newsletterSubmitted && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-green-500/20 border border-green-400/30 rounded-xl p-6 mb-4"
+                >
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">🎉</div>
+                    <p className="text-green-100 font-bold text-lg mb-2">¡Suscripción Exitosa!</p>
+                    <p className="text-green-200 text-sm mb-3">
+                      Te hemos enviado un email de bienvenida con toda la información de GeekWear.
+                    </p>
+                    <p className="text-green-300 text-xs">
+                      Revisa tu bandeja de entrada (y spam por si acaso). También puedes contactarnos por WhatsApp para
+                      información inmediata.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+                className="text-purple-200 text-sm"
+              >
+                No spam, solo contenido geek de calidad. Puedes darte de baja cuando quieras.
+              </motion.p>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+      {/* Botón flotante de WhatsApp */}
+      <motion.button
+        onClick={() => {
+          const message = encodeURIComponent(
+            "Hola, me interesa obtener información sobre los productos de GeekWear. ¿Podrían ayudarme?",
+          )
+          window.open(`https://wa.me/5219983513473?text=${message}`, "_blank")
+        }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 group"
+        title="Contactar por WhatsApp"
+      >
+        <MessageCircle className="w-6 h-6 group-hover:animate-pulse" />
+        <div className="absolute -top-12 right-0 bg-slate-800 text-white text-sm px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+          ¡Chatea con nosotros!
+        </div>
+      </motion.button>
     </div>
   )
 }

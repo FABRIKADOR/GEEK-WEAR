@@ -8,6 +8,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import ScrollToTop from "@/components/scroll-to-top"
 import { CartProvider } from "@/hooks/use-cart"
+import Chatbox from "@/components/chatbox"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -15,7 +16,7 @@ export const metadata = {
   title: "GeekWear - Tienda de Camisetas Geek",
   description: "La mejor tienda de camisetas geek y anime",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -38,6 +39,7 @@ export default function RootLayout({
                 <Footer />
               </div>
               <ScrollToTop />
+              <Chatbox />
               <Toaster />
             </CartProvider>
           </AuthProvider>
