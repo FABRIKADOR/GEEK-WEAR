@@ -13,4 +13,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Exportaciones requeridas
+export { createClient }
+export { supabase }
 export default supabase

@@ -60,3 +60,52 @@ export const exportSchema = z.object({
     .optional(),
   format: z.enum(["xlsx", "csv"]).default("xlsx"),
 })
+
+// Funciones de validación individuales requeridas
+export const validateEmail = (email: string): { isValid: boolean; error?: string } => {
+  try {
+    emailSchema.parse(email)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0]?.message || "Email inválido" }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export const validatePassword = (password: string): { isValid: boolean; error?: string } => {
+  try {
+    passwordSchema.parse(password)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0]?.message || "Contraseña inválida" }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export const validatePhone = (phone: string): { isValid: boolean; error?: string } => {
+  try {
+    phoneSchema.parse(phone)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0]?.message || "Teléfono inválido" }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}
+
+export const validateName = (name: string): { isValid: boolean; error?: string } => {
+  try {
+    nameSchema.parse(name)
+    return { isValid: true }
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0]?.message || "Nombre inválido" }
+    }
+    return { isValid: false, error: "Error de validación" }
+  }
+}

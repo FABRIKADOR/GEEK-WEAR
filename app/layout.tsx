@@ -1,22 +1,41 @@
-import type React from "react"
-import { Inter } from "next/font/google"
+import type { Metadata } from "next"
+import { Inter } from 'next/font/google'
 import "./globals.css"
-import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "@/contexts/auth-context"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/contexts/auth-context"
+import { CartProvider } from "@/hooks/use-cart"
+import { Toaster } from "@/components/ui/toaster"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import ScrollToTop from "@/components/scroll-to-top"
-import { CartProvider } from "@/hooks/use-cart"
 import Chatbox from "@/components/chatbox"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata = {
-  title: "GeekWear - Tienda de Camisetas Geek",
-  description: "La mejor tienda de camisetas geek y anime",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-  generator: "v0.dev",
+export const metadata: Metadata = {
+  title: "GeekWear - Ropa Geek y Anime",
+  description: "Descubre la mejor colección de ropa geek, anime y gaming. Camisetas, hoodies y accesorios únicos para verdaderos fanáticos.",
+  keywords: ["ropa geek", "anime", "gaming", "camisetas", "hoodies", "manga", "otaku"],
+  authors: [{ name: "GeekWear" }],
+  creator: "GeekWear",
+  publisher: "GeekWear",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    siteName: "GeekWear",
+    title: "GeekWear - Ropa Geek y Anime",
+    description: "Descubre la mejor colección de ropa geek, anime y gaming.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GeekWear - Ropa Geek y Anime",
+    description: "Descubre la mejor colección de ropa geek, anime y gaming.",
+  },
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -25,17 +44,21 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className="overflow-x-hidden">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-      </head>
-      <body className={`${inter.className} overflow-x-hidden`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+    <html lang="es" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
           <AuthProvider>
             <CartProvider>
-              <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+              <div className="flex flex-col min-h-screen">
                 <Header />
-                <main className="flex-1 w-full overflow-x-hidden">{children}</main>
+                <main className="flex-1">
+                  {children}
+                </main>
                 <Footer />
               </div>
               <ScrollToTop />
