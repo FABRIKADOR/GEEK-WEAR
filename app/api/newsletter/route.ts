@@ -1,97 +1,69 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { sendEmail, createWelcomeEmailTemplate } from "@/lib/email-service"
+import { validateEmail } from "@/lib/validations"
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("API Newsletter: Recibiendo petición")
-
-    const body = await request.json()
-    const { email } = body
-
-    console.log("Email recibido:", email)
+    const { email } = await request.json()
 
     // Validar email
-    if (!email) {
-      console.log("Error: Email no proporcionado")
-      return NextResponse.json({ error: "Email es requerido" }, { status: 400 })
+    const emailValidation = validateEmail(email)
+    if (!emailValidation.isValid) {
+      return NextResponse.json({ error: emailValidation.error || "Email inválido" }, { status: 400 })
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      console.log("Error: Email inválido")
-      return NextResponse.json({ error: "Email inválido" }, { status: 400 })
-    }
+    console.log("📧 Procesando suscripción para:", email)
 
-    console.log("Procesando suscripción para:", email)
+    // Crear template de email
+    const emailTemplate = createWelcomeEmailTemplate(email)
 
-    try {
-      // Crear el template del email
-      const emailTemplate = createWelcomeEmailTemplate(email)
+    // Enviar email de bienvenida (simulado)
+    const emailResult = await sendEmail({
+      to: email,
+      subject: "¡Bienvenido a GeekWear! 🎮",
+      html: emailTemplate,
+    })
 
-      // Enviar email de bienvenida (simulado por ahora)
-      const emailResult = await sendEmail({
-        to: email,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-        text: emailTemplate.text,
-      })
+    if (emailResult.success) {
+      console.log("✅ Email enviado exitosamente:", emailResult.messageId)
 
-      console.log("Email procesado exitosamente:", emailResult.messageId)
-
-      // Información de la tienda para la respuesta
-      const storeInfo = {
-        storeName: "GeekWear",
-        email: email,
-        location: "UPQROO - Cancún, México",
-        phone: "+52 (998) 351-3473",
-        whatsapp: "https://wa.me/5219983513473",
-        message: "¡Gracias por suscribirte a GeekWear! Tu suscripción ha sido registrada exitosamente.",
-        emailSent: emailResult.provider === "simulation" ? false : true,
+      return NextResponse.json({
+        success: true,
+        message: "Suscripción exitosa. ¡Revisa tu email!",
         messageId: emailResult.messageId,
-        provider: emailResult.provider,
-        note:
-          emailResult.provider === "simulation"
-            ? "Email simulado - Para emails reales, configura un proveedor de email como Resend"
-            : undefined,
-      }
-
-      console.log("Suscripción exitosa:", storeInfo)
-
-      return NextResponse.json({
-        success: true,
-        message:
-          emailResult.provider === "simulation"
-            ? "Suscripción registrada exitosamente (email simulado)"
-            : "Suscripción exitosa y email enviado",
-        data: storeInfo,
+        type: "simulated", // Indicar que es simulado
       })
-    } catch (emailError) {
-      console.error("Error procesando email:", emailError)
+    } else {
+      console.error("❌ Error enviando email:", emailResult.error)
 
-      // Aunque falle el email, consideramos la suscripción exitosa
-      return NextResponse.json({
-        success: true,
-        message: "Suscripción registrada, pero hubo un problema con el email",
-        data: {
-          storeName: "GeekWear",
-          email: email,
-          location: "UPQROO - Cancún, México",
-          phone: "+52 (998) 351-3473",
-          whatsapp: "https://wa.me/5219983513473",
-          message: "¡Gracias por suscribirte a GeekWear! Tu suscripción fue registrada exitosamente.",
-          emailSent: false,
-          error: "Error procesando email",
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Error al enviar email de confirmación",
+          error: emailResult.error,
         },
-      })
+        { status: 500 },
+      )
     }
   } catch (error) {
-    console.error("Error en API Newsletter:", error)
+    console.error("❌ Error en API newsletter:", error)
+
     return NextResponse.json(
       {
-        error: "Error interno del servidor",
-        details: error instanceof Error ? error.message : "Error desconocido",
+        success: false,
+        message: "Error interno del servidor",
+        error: "Error procesando suscripción",
       },
       { status: 500 },
     )
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    message: "API Newsletter funcionando",
+    endpoints: {
+      POST: "Suscribirse al newsletter",
+    },
+  })
 }

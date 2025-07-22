@@ -17,27 +17,35 @@ interface Message {
 const PREDEFINED_RESPONSES = {
   greeting: {
     text: "¡Hola! 👋 Soy el asistente virtual de GeekWear. ¿En qué puedo ayudarte hoy?",
-    options: ["Ver productos", "Información de envíos", "Soporte técnico", "Horarios", "Ofertas especiales"],
+    options: ["Ver productos", "Información de envíos", "Soporte técnico", "Horarios de atención"],
   },
   productos: {
-    text: "🛍️ Tenemos una increíble colección de productos geek:\n\n• Camisetas de anime (Naruto, Dragon Ball, One Piece)\n• Camisetas gaming (League of Legends, Minecraft, Fortnite)\n• Accesorios y gadgets tecnológicos\n• Productos personalizados\n\n¿Te interesa alguna categoría en particular?",
-    options: ["Camisetas anime", "Camisetas gaming", "Accesorios", "Volver al menú"],
+    text: "🛍️ Tenemos una increíble colección de camisetas geek:\n\n• Anime (Naruto, Dragon Ball, Attack on Titan)\n• Gaming (Zelda, Mario, Pokémon)\n• Tecnología y programación\n• Diseños exclusivos\n\n¿Te interesa alguna categoría en particular?",
+    options: ["Ver camisetas anime", "Ver camisetas gaming", "Ofertas especiales", "Volver al menú"],
   },
   envios: {
-    text: "📦 Información de envíos:\n\n• Envío GRATIS en pedidos mayores a $500 MXN\n• Entrega en 2-5 días hábiles en Quintana Roo\n• Envíos a toda la República Mexicana\n• Costo de envío desde $80 MXN\n• Rastreo incluido en todos los envíos\n\n¿Necesitas más detalles sobre algún aspecto?",
-    options: ["Costos de envío", "Tiempos de entrega", "Rastreo", "Volver al menú"],
+    text: "📦 Información de envíos:\n\n• Envío gratis en compras +$500\n• Entrega 3-5 días hábiles\n• Cobertura nacional\n• Rastreo incluido\n• Empaque discreto\n\n¿Necesitas más detalles?",
+    options: ["Costos de envío", "Tiempos de entrega", "Rastreo de pedido", "Volver al menú"],
   },
   soporte: {
-    text: "🛠️ Soporte técnico disponible:\n\n• Chat en vivo: Lun-Vie 9:00 AM - 6:00 PM\n• WhatsApp: +52 (998) 351-3473\n• Email: contact@geekwear.com\n• Respuesta promedio: 2 horas\n\n¿Prefieres contactarnos por WhatsApp ahora?",
-    options: ["Ir a WhatsApp", "Enviar email", "Volver al menú"],
+    text: "🛠️ Soporte técnico disponible:\n\n• Chat en vivo: Lun-Vie 9AM-6PM\n• Email: soporte@geekwear.com\n• WhatsApp: +52 998 351-3473\n• Respuesta promedio: 2 horas\n\n¿Prefieres contactar por WhatsApp?",
+    options: ["Abrir WhatsApp", "Enviar email", "Horarios detallados", "Volver al menú"],
   },
   horarios: {
-    text: "🕒 Nuestros horarios de atención:\n\n• Lunes a Viernes: 9:00 AM - 6:00 PM\n• Sábados: 10:00 AM - 4:00 PM\n• Domingos: Cerrado\n• Zona horaria: GMT-5 (México)\n\nPuedes visitarnos en UPQROO o contactarnos por WhatsApp.",
-    options: ["Ubicación", "WhatsApp", "Volver al menú"],
+    text: "🕒 Horarios de atención:\n\n• Lunes a Viernes: 9:00 AM - 6:00 PM\n• Sábados: 10:00 AM - 4:00 PM\n• Domingos: Cerrado\n• Zona horaria: México (GMT-6)\n\nFuera de horario, puedes escribirnos y te responderemos pronto.",
+    options: ["Contactar ahora", "Dejar mensaje", "Ver ubicación", "Volver al menú"],
+  },
+  anime: {
+    text: "🎌 Camisetas de Anime más populares:\n\n• Naruto y Boruto\n• Dragon Ball Super\n• Attack on Titan\n• One Piece\n• Demon Slayer\n• My Hero Academia\n\n¡Diseños oficiales y exclusivos!",
+    options: ["Ver catálogo anime", "Ofertas anime", "Próximos lanzamientos", "Volver al menú"],
+  },
+  gaming: {
+    text: "🎮 Camisetas Gaming destacadas:\n\n• The Legend of Zelda\n• Super Mario Bros\n• Pokémon\n• Minecraft\n• Among Us\n• Retro Gaming\n\n¡Para verdaderos gamers!",
+    options: ["Ver catálogo gaming", "Ofertas gaming", "Ediciones limitadas", "Volver al menú"],
   },
   ofertas: {
-    text: "🔥 ¡Ofertas especiales disponibles!\n\n• 15% OFF en tu primera compra\n• 2x1 en camisetas seleccionadas\n• Envío gratis en compras +$500\n• Descuentos por volumen para revendedores\n\n¿Te interesa alguna oferta en particular?",
-    options: ["Primera compra", "Ofertas 2x1", "Para revendedores", "Volver al menú"],
+    text: "🔥 Ofertas especiales activas:\n\n• 2x1 en camisetas seleccionadas\n• 20% OFF en tu primera compra\n• Envío gratis en compras +$500\n• Descuento por volumen\n\n¡Aprovecha antes de que terminen!",
+    options: ["Ver ofertas", "Código de descuento", "Términos y condiciones", "Volver al menú"],
   },
 }
 
@@ -102,19 +110,21 @@ export default function Chatbox() {
         addBotMessage(PREDEFINED_RESPONSES.envios.text, PREDEFINED_RESPONSES.envios.options)
       } else if (userMessage.includes("soporte") || userMessage.includes("ayuda") || userMessage.includes("problema")) {
         addBotMessage(PREDEFINED_RESPONSES.soporte.text, PREDEFINED_RESPONSES.soporte.options)
-      } else if (userMessage.includes("horario") || userMessage.includes("hora") || userMessage.includes("abierto")) {
+      } else if (userMessage.includes("horario") || userMessage.includes("hora") || userMessage.includes("cuando")) {
         addBotMessage(PREDEFINED_RESPONSES.horarios.text, PREDEFINED_RESPONSES.horarios.options)
-      } else if (
-        userMessage.includes("oferta") ||
-        userMessage.includes("descuento") ||
-        userMessage.includes("promocion")
-      ) {
+      } else if (userMessage.includes("anime")) {
+        addBotMessage(PREDEFINED_RESPONSES.anime.text, PREDEFINED_RESPONSES.anime.options)
+      } else if (userMessage.includes("gaming") || userMessage.includes("juego")) {
+        addBotMessage(PREDEFINED_RESPONSES.gaming.text, PREDEFINED_RESPONSES.gaming.options)
+      } else if (userMessage.includes("oferta") || userMessage.includes("descuento")) {
         addBotMessage(PREDEFINED_RESPONSES.ofertas.text, PREDEFINED_RESPONSES.ofertas.options)
       } else {
-        addBotMessage(
-          "🤔 No estoy seguro de cómo ayudarte con eso. ¿Podrías elegir una de estas opciones?",
-          PREDEFINED_RESPONSES.greeting.options,
-        )
+        addBotMessage("🤔 No estoy seguro de cómo ayudarte con eso. ¿Podrías elegir una de estas opciones?", [
+          "Ver productos",
+          "Información de envíos",
+          "Soporte técnico",
+          "Horarios de atención",
+        ])
       }
     }, 500)
   }
@@ -133,27 +143,33 @@ export default function Chatbox() {
         case "soporte técnico":
           addBotMessage(PREDEFINED_RESPONSES.soporte.text, PREDEFINED_RESPONSES.soporte.options)
           break
-        case "horarios":
+        case "horarios de atención":
           addBotMessage(PREDEFINED_RESPONSES.horarios.text, PREDEFINED_RESPONSES.horarios.options)
+          break
+        case "ver camisetas anime":
+          addBotMessage(PREDEFINED_RESPONSES.anime.text, PREDEFINED_RESPONSES.anime.options)
+          break
+        case "ver camisetas gaming":
+          addBotMessage(PREDEFINED_RESPONSES.gaming.text, PREDEFINED_RESPONSES.gaming.options)
           break
         case "ofertas especiales":
           addBotMessage(PREDEFINED_RESPONSES.ofertas.text, PREDEFINED_RESPONSES.ofertas.options)
           break
-        case "ir a whatsapp":
-          window.open("https://wa.me/5219983513473?text=Hola,%20necesito%20soporte%20técnico", "_blank")
-          addBotMessage(
-            "Te he redirigido a WhatsApp. ¿Hay algo más en lo que pueda ayudarte?",
-            PREDEFINED_RESPONSES.greeting.options,
-          )
+        case "abrir whatsapp":
+          addBotMessage("📱 Te redirijo a WhatsApp para atención personalizada...")
+          setTimeout(() => {
+            window.open("https://wa.me/5299835134733?text=Hola,%20necesito%20ayuda%20con%20GeekWear", "_blank")
+          }, 1000)
           break
         case "volver al menú":
-          addBotMessage("¿En qué más puedo ayudarte?", PREDEFINED_RESPONSES.greeting.options)
+          addBotMessage(PREDEFINED_RESPONSES.greeting.text, PREDEFINED_RESPONSES.greeting.options)
           break
         default:
-          addBotMessage(
-            "Gracias por tu interés. Para más detalles específicos, te recomiendo contactarnos por WhatsApp.",
-            ["Ir a WhatsApp", "Volver al menú"],
-          )
+          addBotMessage("Entiendo tu interés. ¿Te gustaría que te conecte con un agente humano para más detalles?", [
+            "Contactar agente",
+            "Abrir WhatsApp",
+            "Volver al menú",
+          ])
       }
     }, 800)
   }
@@ -162,7 +178,6 @@ export default function Chatbox() {
     return date.toLocaleTimeString("es-MX", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true,
     })
   }
 
@@ -179,7 +194,7 @@ export default function Chatbox() {
         </Button>
       </div>
 
-      {/* Ventana de chat */}
+      {/* Chat window */}
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-40 w-80 sm:w-96">
           <Card className="h-[500px] flex flex-col shadow-2xl border-0 overflow-hidden">
@@ -188,7 +203,7 @@ export default function Chatbox() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-                    <Bot className="h-6 w-6" />
+                    <Bot className="h-5 w-5" />
                   </div>
                   <div>
                     <h3 className="font-semibold">GeekWear Assistant</h3>
@@ -209,74 +224,71 @@ export default function Chatbox() {
               </div>
             </CardHeader>
 
-            {/* Área de mensajes */}
+            {/* Messages */}
             <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 min-h-0">
               {messages.map((message) => (
-                <div key={message.id} className="space-y-2">
-                  <div className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`flex items-start space-x-2 max-w-[80%] ${message.sender === "user" ? "flex-row-reverse space-x-reverse" : ""}`}
-                    >
+                <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`flex gap-2 max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}
+                  >
+                    <div className="flex-shrink-0">
+                      {message.sender === "bot" ? (
+                        <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-white" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
                       <div
-                        className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                          message.sender === "user" ? "bg-purple-600 text-white" : "bg-blue-600 text-white"
-                        }`}
-                      >
-                        {message.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                      </div>
-                      <div
-                        className={`rounded-lg p-3 ${
-                          message.sender === "user" ? "bg-purple-600 text-white" : "bg-white border shadow-sm"
+                        className={`p-3 rounded-lg ${
+                          message.sender === "user" ? "bg-blue-600 text-white" : "bg-white border shadow-sm"
                         }`}
                       >
                         <p className="text-sm whitespace-pre-line">{message.text}</p>
-                        <div
-                          className={`flex items-center mt-1 text-xs ${
-                            message.sender === "user" ? "text-purple-200" : "text-gray-500"
-                          }`}
-                        >
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatTime(message.timestamp)}
-                        </div>
                       </div>
+                      <div className="flex items-center gap-1 mt-1 px-1">
+                        <Clock className="h-3 w-3 text-gray-400" />
+                        <span className="text-xs text-gray-500">{formatTime(message.timestamp)}</span>
+                      </div>
+                      {message.options && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {message.options.map((option, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOptionClick(option)}
+                              className="text-xs h-7 px-2 hover:bg-purple-50 hover:border-purple-300"
+                            >
+                              {option}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  {/* Opciones rápidas */}
-                  {message.options && (
-                    <div className="flex flex-wrap gap-2 ml-10">
-                      {message.options.map((option, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOptionClick(option)}
-                          className="text-xs hover:bg-purple-50 hover:border-purple-300"
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
 
-              {/* Indicador de escritura */}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="flex items-start space-x-2">
-                    <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-600 text-white flex items-center justify-center">
-                      <Bot className="h-4 w-4" />
+                  <div className="flex gap-2 max-w-[80%]">
+                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="bg-white border rounded-lg p-3 shadow-sm">
+                    <div className="bg-white border shadow-sm p-3 rounded-lg">
                       <div className="flex space-x-1">
-                        <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                         <div
-                          className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                           style={{ animationDelay: "0.1s" }}
                         ></div>
                         <div
-                          className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                           style={{ animationDelay: "0.2s" }}
                         ></div>
                       </div>
@@ -284,13 +296,12 @@ export default function Chatbox() {
                   </div>
                 </div>
               )}
-
               <div ref={messagesEndRef} />
             </CardContent>
 
-            {/* Input de mensaje */}
-            <div className="flex-shrink-0 p-4 border-t bg-white">
-              <div className="flex space-x-2">
+            {/* Input */}
+            <div className="p-4 border-t bg-white flex-shrink-0">
+              <div className="flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}

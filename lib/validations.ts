@@ -2,15 +2,15 @@ import { z } from "zod"
 
 // Esquemas de validación con Zod
 const emailSchema = z.string().email("Email inválido")
-const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
-const phoneSchema = z.string().regex(/^\+?[1-9]\d{1,14}$/, "Número de teléfono inválido")
+const passwordSchema = z.string().min(8, "La contraseña debe tener al menos 8 caracteres")
+const phoneSchema = z.string().regex(/^[+]?[1-9][\d]{0,15}$/, "Número de teléfono inválido")
 const nameSchema = z
   .string()
   .min(2, "El nombre debe tener al menos 2 caracteres")
   .max(50, "El nombre no puede tener más de 50 caracteres")
 
 // Funciones de validación
-export function validateEmail(email: string): { isValid: boolean; error?: string } {
+export const validateEmail = (email: string) => {
   try {
     emailSchema.parse(email)
     return { isValid: true }
@@ -22,7 +22,7 @@ export function validateEmail(email: string): { isValid: boolean; error?: string
   }
 }
 
-export function validatePassword(password: string): { isValid: boolean; error?: string } {
+export const validatePassword = (password: string) => {
   try {
     passwordSchema.parse(password)
     return { isValid: true }
@@ -34,7 +34,7 @@ export function validatePassword(password: string): { isValid: boolean; error?: 
   }
 }
 
-export function validatePhone(phone: string): { isValid: boolean; error?: string } {
+export const validatePhone = (phone: string) => {
   try {
     phoneSchema.parse(phone)
     return { isValid: true }
@@ -46,7 +46,7 @@ export function validatePhone(phone: string): { isValid: boolean; error?: string
   }
 }
 
-export function validateName(name: string): { isValid: boolean; error?: string } {
+export const validateName = (name: string) => {
   try {
     nameSchema.parse(name)
     return { isValid: true }
@@ -58,41 +58,39 @@ export function validateName(name: string): { isValid: boolean; error?: string }
   }
 }
 
-// Esquemas adicionales para formularios
-export const loginSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-})
+// Validación de formulario completo
+export const validateUserForm = (data: {
+  email: string
+  password: string
+  name: string
+  phone?: string
+}) => {
+  const errors: Record<string, string> = {}
 
-export const registerSchema = z
-  .object({
-    email: emailSchema,
-    password: passwordSchema,
-    confirmPassword: z.string(),
-    firstName: nameSchema,
-    lastName: nameSchema,
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"],
-  })
+  const emailResult = validateEmail(data.email)
+  if (!emailResult.isValid) {
+    errors.email = emailResult.error || "Email inválido"
+  }
 
-export const profileSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
-  phone: phoneSchema.optional(),
-  email: emailSchema,
-})
+  const passwordResult = validatePassword(data.password)
+  if (!passwordResult.isValid) {
+    errors.password = passwordResult.error || "Contraseña inválida"
+  }
 
-export const addressSchema = z.object({
-  street: z.string().min(5, "La dirección debe tener al menos 5 caracteres"),
-  city: z.string().min(2, "La ciudad debe tener al menos 2 caracteres"),
-  state: z.string().min(2, "El estado debe tener al menos 2 caracteres"),
-  zipCode: z.string().min(5, "El código postal debe tener al menos 5 caracteres"),
-  country: z.string().min(2, "El país debe tener al menos 2 caracteres"),
-})
+  const nameResult = validateName(data.name)
+  if (!nameResult.isValid) {
+    errors.name = nameResult.error || "Nombre inválido"
+  }
 
-export type LoginFormData = z.infer<typeof loginSchema>
-export type RegisterFormData = z.infer<typeof registerSchema>
-export type ProfileFormData = z.infer<typeof profileSchema>
-export type AddressFormData = z.infer<typeof addressSchema>
+  if (data.phone) {
+    const phoneResult = validatePhone(data.phone)
+    if (!phoneResult.isValid) {
+      errors.phone = phoneResult.error || "Teléfono inválido"
+    }
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  }
+}
