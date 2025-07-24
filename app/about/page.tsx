@@ -3,19 +3,108 @@
 import { useState, useEffect } from "react"
 import { motion, useInView } from "framer-motion"
 import { useRef } from "react"
-import { Rocket, Users, Heart, Zap, Star, Trophy, Target, Shield, Sparkles, Globe, Code, Gamepad2 } from "lucide-react"
+import {
+  Rocket,
+  Users,
+  Heart,
+  Zap,
+  Star,
+  Trophy,
+  Target,
+  Shield,
+  Sparkles,
+  Globe,
+  Code,
+  Gamepad2,
+  Play,
+  RefreshCw,
+} from "lucide-react"
+import { VideoPlayer } from "@/components/video-player"
+import { useAuth } from "@/contexts/auth-context"
+import type { VideoProgress } from "@/services/video-service"
+import { Button } from "@/components/ui/button"
 
 const AboutPage = () => {
   const [currentYear] = useState(new Date().getFullYear())
+  const [videoProgress, setVideoProgress] = useState<VideoProgress[]>([])
+  const [isLoadingProgress, setIsLoadingProgress] = useState(false)
+  const [progressError, setProgressError] = useState<string | null>(null)
   const heroRef = useRef(null)
   const statsRef = useRef(null)
   const timelineRef = useRef(null)
   const teamRef = useRef(null)
+  const videosRef = useRef(null)
+  const { user } = useAuth()
 
   const isHeroInView = useInView(heroRef, { once: true })
   const isStatsInView = useInView(statsRef, { once: true })
   const isTimelineInView = useInView(timelineRef, { once: true })
   const isTeamInView = useInView(teamRef, { once: true })
+  const isVideosInView = useInView(videosRef, { once: true })
+
+  // URLs reales de tus videos desde Supabase Storage
+  const videos = [
+    {
+      url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/productos/2025-06-22%2021-07-11.mkv`,
+      title: "Detrás de Escenas: Cómo Creamos GeekWear",
+      description:
+        "Descubre el proceso creativo detrás de nuestros diseños únicos y conoce al equipo que hace posible la magia de GeekWear.",
+      thumbnail: "/placeholder.svg?height=300&width=500",
+    },
+    {
+      url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/product-images/productos/2025-06-22%2021-10-14.mkv`,
+      title: "Showcase de Productos: Lo Mejor de GeekWear 2024",
+      description:
+        "Un recorrido por nuestros productos más populares y las nuevas colecciones que están revolucionando la moda geek.",
+      thumbnail: "/placeholder.svg?height=300&width=500",
+    },
+  ]
+
+  // Cargar progreso de videos del usuario
+  useEffect(() => {
+    if (user) {
+      loadUserVideoProgress()
+    } else {
+      // Limpiar progreso si no hay usuario
+      setVideoProgress([])
+      setProgressError(null)
+    }
+  }, [user])
+
+  const loadUserVideoProgress = async () => {
+    if (!user) return
+
+    setIsLoadingProgress(true)
+    setProgressError(null)
+
+    try {
+      const response = await fetch("/api/video-progress", {
+        headers: {
+          Authorization: `Bearer ${user.access_token || ""}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      if (data.progress) {
+        setVideoProgress(data.progress)
+        console.log(`Cargados ${data.count || data.progress.length} registros de progreso`)
+      } else {
+        setVideoProgress([])
+        console.log("No hay progreso de videos para este usuario")
+      }
+    } catch (error) {
+      console.error("Error loading user video progress:", error)
+      setProgressError("Error al cargar el progreso de videos")
+      setVideoProgress([])
+    } finally {
+      setIsLoadingProgress(false)
+    }
+  }
 
   // Animated counter hook
   const useCounter = (end: number, duration = 2000) => {
@@ -112,30 +201,55 @@ const AboutPage = () => {
       name: "Arian Aguilar",
       role: "Líder del Proyecto & Arquitecto Principal",
       description: "Desarrollador principal y visionario del proyecto. Ingeniero en Software de la UPQROO, Cancún",
-      avatar: "/placeholder.svg?height=200&width=200&query=professional tech leader mexican developer",
+      avatar: "/placeholder.svg?height=200&width=200",
     },
     {
       name: "Axel Coutiño",
       role: "Co-fundador & Estratega",
       description:
         "Especialista en experiencia de usuario y estrategia de producto. Ingeniero en Software de la UPQROO, Cancún",
-      avatar: "/placeholder.svg?height=200&width=200&query=professional developer mexican engineer",
+      avatar: "/placeholder.svg?height=200&width=200",
     },
     {
       name: "Roberto Fierro",
       role: "Director Creativo",
       description:
         "Artista digital especializado en cultura geek y diseño visual. Ingeniero en Software de la UPQROO, Cancún",
-      avatar: "/placeholder.svg?height=200&width=200&query=creative director mexican developer",
+      avatar: "/placeholder.svg?height=200&width=200",
     },
     {
       name: "Christopher Ramon",
       role: "Ingeniero de Software",
       description:
         "Desarrollador full-stack apasionado por la innovación tecnológica. Ingeniero en Software de la UPQROO, Cancún",
-      avatar: "/placeholder.svg?height=200&width=200&query=software engineer mexican developer",
+      avatar: "/placeholder.svg?height=200&width=200",
     },
   ]
+
+  // Función para obtener el progreso de un video específico
+  const getVideoProgress = (videoUrl: string) => {
+    return videoProgress.find((p) => p.video_url === videoUrl)
+  }
+
+  // Calcular estadísticas de progreso
+  const getProgressStats = () => {
+    if (!user || videoProgress.length === 0) {
+      return { completed: 0, inProgress: 0, averageProgress: 0 }
+    }
+
+    const completed = videoProgress.filter((p) => p.completed).length
+    const inProgress = videoProgress.filter((p) => p.current_time > 0 && !p.completed).length
+    const averageProgress = Math.round(
+      videoProgress.reduce((acc, p) => {
+        const percentage = p.duration > 0 ? (p.current_time / p.duration) * 100 : 0
+        return acc + percentage
+      }, 0) / videoProgress.length,
+    )
+
+    return { completed, inProgress, averageProgress }
+  }
+
+  const progressStats = getProgressStats()
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden">
@@ -144,7 +258,7 @@ const AboutPage = () => {
         ref={heroRef}
         className="relative h-screen flex items-center justify-center"
         style={{
-          backgroundImage: "url(/images/hero-about.png)",
+          backgroundImage: "url(/placeholder.svg?height=1080&width=1920&query=geekwear hero background)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -247,6 +361,138 @@ const AboutPage = () => {
         </div>
       </section>
 
+      {/* Videos Section */}
+      <section ref={videosRef} className="py-20 bg-gradient-to-b from-black to-gray-900">
+        <div className="container mx-auto px-6">
+          <motion.h2
+            className="text-4xl md:text-5xl font-bold text-center mb-8 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: 50 }}
+            animate={isVideosInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1 }}
+          >
+            Conoce Nuestra Historia
+          </motion.h2>
+
+          <motion.p
+            className="text-xl text-center text-gray-300 mb-16 max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isVideosInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 0.3 }}
+          >
+            Sumérgete en el mundo de GeekWear con estos videos exclusivos que muestran nuestro proceso creativo y pasión
+            por la cultura geek
+          </motion.p>
+
+          {/* Video Progress Summary */}
+          {user && (
+            <motion.div
+              className="mb-12 p-6 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-xl border border-purple-500/30"
+              initial={{ opacity: 0, y: 30 }}
+              animate={isVideosInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 1, delay: 0.5 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Play className="w-5 h-5 text-purple-400" />
+                  Tu Progreso de Videos
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadUserVideoProgress}
+                  disabled={isLoadingProgress}
+                  className="bg-transparent border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                >
+                  {isLoadingProgress ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
+                  Actualizar
+                </Button>
+              </div>
+
+              {progressError && (
+                <div className="mb-4 p-3 bg-red-900/30 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                  {progressError}
+                </div>
+              )}
+
+              {isLoadingProgress ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto"></div>
+                  <p className="text-gray-400 mt-2">Cargando progreso...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">{progressStats.completed}</div>
+                    <div className="text-sm text-gray-400">Videos Completados</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-400">{progressStats.inProgress}</div>
+                    <div className="text-sm text-gray-400">En Progreso</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-400">{progressStats.averageProgress}%</div>
+                    <div className="text-sm text-gray-400">Progreso Promedio</div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Videos Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {videos.map((video, index) => {
+              const progress = getVideoProgress(video.url)
+
+              return (
+                <motion.div
+                  key={index}
+                  className="group"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={isVideosInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ duration: 0.8, delay: index * 0.3 + 0.7 }}
+                >
+                  <div className="bg-gradient-to-br from-gray-900/90 to-gray-800/90 rounded-xl overflow-hidden border border-gray-700 group-hover:border-purple-500/50 transition-all duration-300">
+                    <VideoPlayer
+                      videoUrl={video.url}
+                      title={video.title}
+                      description={video.description}
+                      thumbnail={video.thumbnail}
+                      className="aspect-video"
+                    />
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+
+          {/* Call to Action */}
+          <motion.div
+            className="text-center mt-16"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isVideosInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 1, delay: 1.5 }}
+          >
+            {!user ? (
+              <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 p-6 rounded-xl border border-purple-500/30">
+                <h3 className="text-xl font-semibold mb-2">¿Quieres trackear tu progreso?</h3>
+                <p className="text-gray-300 mb-4">
+                  Inicia sesión para guardar tu progreso de videos y continuar donde lo dejaste
+                </p>
+                <Button className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white px-6 py-3 rounded-full font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all duration-300">
+                  Iniciar Sesión
+                </Button>
+              </div>
+            ) : (
+              <p className="text-gray-300">¡Gracias por ver nuestros videos! Tu progreso se guarda automáticamente.</p>
+            )}
+          </motion.div>
+        </div>
+      </section>
+
       {/* Timeline Section */}
       <section ref={timelineRef} className="py-20 bg-black relative">
         <div className="container mx-auto px-6">
@@ -298,7 +544,7 @@ const AboutPage = () => {
       <section
         className="py-20 relative"
         style={{
-          backgroundImage: "url(/images/mission-bg.png)",
+          backgroundImage: "url(/placeholder.svg?height=800&width=1920&query=geekwear mission background)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -376,7 +622,7 @@ const AboutPage = () => {
         ref={teamRef}
         className="py-20 relative"
         style={{
-          backgroundImage: "url(/images/team-bg.png)",
+          backgroundImage: "url(/placeholder.svg?height=800&width=1920&query=geekwear team background)",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
