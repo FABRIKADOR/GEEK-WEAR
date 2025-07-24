@@ -23,6 +23,9 @@ import { VideoPlayer } from "@/components/video-player"
 import { useAuth } from "@/contexts/auth-context"
 import type { VideoProgress } from "@/services/video-service"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
 const AboutPage = () => {
   const [currentYear] = useState(new Date().getFullYear())
@@ -78,28 +81,49 @@ const AboutPage = () => {
     setProgressError(null)
 
     try {
+      // Obtener el token de la sesión actual
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error("No hay sesión activa - inicia sesión nuevamente")
+      }
+
+      console.log("🎫 Token obtenido para cargar progreso")
+
       const response = await fetch("/api/video-progress", {
+        method: "GET",
         headers: {
-          Authorization: `Bearer ${user.access_token || ""}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
+        credentials: "include",
       })
 
+      console.log("📡 Respuesta de API:", response.status, response.statusText)
+
+      if (response.status === 401) {
+        throw new Error("No autorizado - inicia sesión nuevamente")
+      }
+
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
+        const errorData = await response.json()
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
 
       if (data.progress) {
         setVideoProgress(data.progress)
-        console.log(`Cargados ${data.count || data.progress.length} registros de progreso`)
+        console.log(`✅ Cargados ${data.count || data.progress.length} registros de progreso`)
       } else {
         setVideoProgress([])
-        console.log("No hay progreso de videos para este usuario")
+        console.log("🆕 No hay progreso de videos para este usuario")
       }
     } catch (error) {
-      console.error("Error loading user video progress:", error)
-      setProgressError("Error al cargar el progreso de videos")
+      console.error("❌ Error loading user video progress:", error)
+      setProgressError(error instanceof Error ? error.message : "Error al cargar el progreso de videos")
       setVideoProgress([])
     } finally {
       setIsLoadingProgress(false)
